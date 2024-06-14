@@ -3,8 +3,8 @@
 #
 # 13/6/2024
 #
-project('mnist-digit-rec-cpp', 'cpp')
+project('mnist-digit-rec-cpp', 'cpp', version : '0.1')
 
-src = ['main.cpp']
+src = ['main.cpp', 'matrix.cpp']
 
 executable('cli', sources : src, cpp_args : ['-std=c++20'])
