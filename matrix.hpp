@@ -16,6 +16,12 @@
 
 namespace thwmakos {
 
+#ifdef NDEBUG
+constexpr auto debug_build = false;
+#else
+constexpr auto debug_build = true;
+#endif
+
 // floating point format used for weights and biases
 using FloatType = float;
 
@@ -36,6 +42,8 @@ class Matrix
 		{
 			assert(m_num_rows > 0);
 			assert(m_num_columns > 0);
+
+			m_data.resize(m_num_rows * m_num_columns, FloatType());
 			assert(static_cast<int>(m_data.size()) == m_num_rows * m_num_columns);
 		}
 
@@ -63,19 +71,31 @@ class Matrix
 			}
 		}
 
+		Matrix(const Matrix &) = default;
+		Matrix(Matrix &&) = default;
+
 		int num_rows() const { return m_num_rows; }
 		int num_cols() const { return m_num_columns; }
 		
 		// member function to access the matrix elements
 		// only being accessed with bounds checking for now
+		// TODO: disable bounds check after being done
+		// TODO: at() is probably a bad name if I access value
+		//       without bounds check due to standard convention
 		FloatType& at(int row, int col)
 		{
-			return m_data.at(row * m_num_columns + col);
+			if constexpr(debug_build)
+				return m_data.at(row * m_num_columns + col);
+			else
+				return m_data[row * m_num_columns + col];
 		}
 
 		FloatType at(int row, int col) const
 		{
-			return m_data.at(row * m_num_columns + col);
+			if constexpr(debug_build)
+				return m_data.at(row * m_num_columns + col);
+			else
+				return m_data[row * m_num_columns + col];
 		}
 
 	private:
@@ -84,8 +104,13 @@ class Matrix
 		std::vector<FloatType> m_data;
 };
 
+
+
 std::ostream & operator<<(std::ostream &os, const Matrix& matrix);
 bool operator==(const Matrix& left, const Matrix& right);
+
+// multiply two matrices 
+Matrix multiply(const Matrix& left, const Matrix& right);
 
 } // namespace thwmakos
 
