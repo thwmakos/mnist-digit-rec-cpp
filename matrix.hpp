@@ -30,11 +30,11 @@ using FloatType = float;
 //
 // supports only the operations that are needed and the element
 // type is determined at before compilation for simplicity
-class Matrix
+class matrix
 {
 	public:
 		// construct new matrix with given number of rows and columns
-		Matrix(int num_rows, int num_columns) : 
+		matrix(int num_rows, int num_columns) : 
 			m_num_rows(num_rows),
 			m_num_columns(num_columns)
 			// initialise the storage vector with enough space
@@ -49,7 +49,7 @@ class Matrix
 
 		// construct a matrix with given data
 		// each initializer list is a row, e.g. Matrix mat ({1, 2, 3}, {4, 5, 6}, {7, 8, 9});
-		Matrix(std::initializer_list<std::initializer_list<FloatType>> init_data)
+		matrix(std::initializer_list<std::initializer_list<FloatType>> init_data)
 		{
 			// there should be the same size for all initializer lists of init_data,
 			// that is, all rows should have the same amount of elements
@@ -71,8 +71,8 @@ class Matrix
 			}
 		}
 
-		Matrix(const Matrix &) = default;
-		Matrix(Matrix &&) = default;
+		matrix(const matrix &) = default;
+		matrix(matrix &&) = default;
 
 		int num_rows() const { return m_num_rows; }
 		int num_cols() const { return m_num_columns; }
@@ -106,11 +106,11 @@ class Matrix
 
 
 
-std::ostream & operator<<(std::ostream &os, const Matrix& matrix);
-bool operator==(const Matrix& left, const Matrix& right);
+std::ostream & operator<<(std::ostream &os, const matrix& matrix);
+bool operator==(const matrix& left, const matrix& right);
 
 // multiply two matrices 
-Matrix multiply(const Matrix& left, const Matrix& right);
+matrix multiply(const matrix& left, const matrix& right);
 
 } // namespace thwmakos
 

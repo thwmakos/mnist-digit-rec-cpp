@@ -13,7 +13,7 @@
 
 namespace thwmakos {
 
-Matrix multiply(const Matrix& left, const Matrix& right)
+matrix multiply(const matrix& left, const matrix& right)
 {
 	// store these so we don't have to call num_rows() and num_cols()
 	// all the time, idk if this speeds up the functions, the above
@@ -29,7 +29,7 @@ Matrix multiply(const Matrix& left, const Matrix& right)
 		throw std::invalid_argument("multiply: mismatching matrix dimensions");
 	}
 	
-	Matrix product(left_num_rows, right_num_cols);
+	matrix product(left_num_rows, right_num_cols);
 	
 	// naive implementation O(n^3) of matrix multiplication
 	// TODO: good learning opportunity for intrinsics here
@@ -48,7 +48,7 @@ Matrix multiply(const Matrix& left, const Matrix& right)
 	return product;
 }
 
-std::ostream & operator<<(std::ostream &os, const Matrix& matrix)
+std::ostream & operator<<(std::ostream &os, const matrix& matrix)
 {
 	// begin with [
 	os << "[ ";
@@ -74,7 +74,7 @@ std::ostream & operator<<(std::ostream &os, const Matrix& matrix)
 	return os;
 }
 
-bool operator==(const Matrix& left, const Matrix& right)
+bool operator==(const matrix& left, const matrix& right)
 {
 	if(left.num_rows() != right.num_rows() ||
 	   left.num_cols() != right.num_cols())
