@@ -10,7 +10,7 @@
 #define MATRIX_HPP_INCLUDED
 
 #include <vector>
-#include <exception>
+#include <stdexcept>
 #include <ostream>
 #include <cassert>
 
@@ -40,11 +40,12 @@ class matrix
 			// initialise the storage vector with enough space
 			// using the default value of the data type
 		{
-			assert(m_num_rows > 0);
-			assert(m_num_columns > 0);
+			if(num_rows <= 0 || num_columns <= 0)
+			{
+				throw std::invalid_argument("number of rows and columns has to be strictly positive");
+			}
 
 			m_data.resize(m_num_rows * m_num_columns, FloatType());
-			assert(static_cast<int>(m_data.size()) == m_num_rows * m_num_columns);
 		}
 
 		// construct a matrix with given data
@@ -73,6 +74,21 @@ class matrix
 
 		matrix(const matrix &) = default;
 		matrix(matrix &&) = default;
+		
+		// resize the matrix
+		// this operation discards all the matrix data
+		// and zeroes out all of the new entries
+		void resize(int new_num_rows, int new_num_cols)
+		{
+			if(new_num_rows <= 0 || new_num_cols <= 0)
+			{
+				throw std::invalid_argument("number of rows and columns has to be strictly positive");
+			}
+			
+			m_num_rows    = new_num_rows;
+			m_num_columns = new_num_cols;
+			m_data.resize(m_num_rows * m_num_columns, FloatType());
+		}
 
 		int num_rows() const { return m_num_rows; }
 		int num_cols() const { return m_num_columns; }
@@ -98,13 +114,21 @@ class matrix
 				return m_data[row * m_num_columns + col];
 		}
 
+		FloatType& operator()(int row, int col)
+		{
+			return at(row, col);
+		}
+
+		FloatType operator()(int row, int col) const
+		{
+			return at(row, col);
+		}
+
 	private:
 		int m_num_rows, m_num_columns; // number of rows and columns in the matrix
 
 		std::vector<FloatType> m_data;
 };
-
-
 
 std::ostream & operator<<(std::ostream &os, const matrix& matrix);
 bool operator==(const matrix& left, const matrix& right);

@@ -8,8 +8,7 @@
 
 #include "matrix.hpp"
 
-#include <limits>
-#include <stdexcept>
+//#include <limits>
 
 namespace thwmakos {
 
