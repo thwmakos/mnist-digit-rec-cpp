@@ -10,6 +10,18 @@
 
 #include "matrix.hpp"
 
+// doctest testing library
+#ifndef NDEBUG
+#define DOCTEST_CONFIG_SUPER_FAST_ASSERTS
+#define DOCTEST_CONFIG_IMPLEMENT
+#else
+#define DOCTEST_CONFIG_DISABLE
+#endif
+
+// uncomment to disable running of tests
+//#define DOCTEST_CONFIG_DISABLE
+#include "doctest/doctest.h"
+
 using namespace thwmakos;
 
 // neural network layers determined at compile time
@@ -23,16 +35,20 @@ struct network
 };
 
 // try various tests on the Matrix class
-void test_matrix()
+TEST_CASE("testing matrix class")
 {
 	matrix mat1 = {{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}, {7.0f, 8.0f, 9.0f}};
 	matrix mat2 = mat1;
+
+	CHECK(mat1 == mat2);
+
 	mat2.at(1, 1) = 10.0f;
 
+	CHECK(mat2.at(1, 1) == 10.0f);
+		
 	matrix mat3(4, 3);
 		
-	assert(mat1 == mat2);	
-	assert(mat1 != mat3);
+	CHECK(mat1 != mat3);
 
 	// test multiplication with two random matrices
 	matrix left ={{1.67,6.41,1.26,6.1},{2.31,3.75,10.1,1.7},{-3.3,-4.7,0.3,9.1},{0.7,-1.5,-3.8,1.5}};
@@ -44,28 +60,21 @@ void test_matrix()
 
 
 	auto product = multiply(left, right);	
-	//std::cout << product << '\n';
 
-	assert(product == expected_product);	
+	CHECK(product == expected_product);	
 
-	try
-	{
-		multiply(mat1, mat3);
-	}
-	catch(std::invalid_argument& e)
-	{
-		std::cout << e.what() << '\n';
-	}
-
-	std::cout << mat1 << '\n';
-	std::cout << mat2 << '\n';
-	std::cout << mat3 << '\n';
+	REQUIRE_THROWS_AS(multiply(mat1, mat3), const std::invalid_argument&);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-    std::cout << "test \n";
-	std::cout << network_sizes[0] << "\n";
-	test_matrix();
-    return 0;
+	doctest::Context ctx;
+	
+	ctx.setOption("abort-after", 5);  // stop after 5 failed asserts
+	ctx.setOption("no-break", true);  // don't break if debugging and a test case fails
+	ctx.applyCommandLine(argc, argv);
+	
+	auto res = ctx.run(); // run test cases unless --no-run
+
+	return res;
 }
