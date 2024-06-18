@@ -17,10 +17,8 @@ matrix multiply(const matrix& left, const matrix& right)
 	// store these so we don't have to call num_rows() and num_cols()
 	// all the time, idk if this speeds up the functions, the above
 	// functions should be inlined anyway 
-	auto left_num_rows = left.num_rows();
-	auto left_num_cols = left.num_cols();
-	auto right_num_rows = right.num_rows();
-	auto right_num_cols = right.num_cols();
+	auto [left_num_rows, left_num_cols]   = left.size();
+	auto [right_num_rows, right_num_cols] = right.size();
 
 	// make sure dimensions are matching
 	if(left_num_cols != right_num_rows)
@@ -47,24 +45,24 @@ matrix multiply(const matrix& left, const matrix& right)
 	return product;
 }
 
-std::ostream & operator<<(std::ostream &os, const matrix& matrix)
+std::ostream & operator<<(std::ostream &os, const matrix& mat)
 {
 	// begin with [
 	os << "[ ";
 
-	for(auto row = 0; row < matrix.num_rows(); ++row)
+	for(auto row = 0; row < mat.num_rows(); ++row)
 	{
 		// for alignment print two spaces
 		if(row > 0)
 			os << ' ' << ' ';
 
-		for(auto col = 0; col < matrix.num_cols(); ++col)
+		for(auto col = 0; col < mat.num_cols(); ++col)
 		{
-			os << matrix.at(row, col) << ' ';
+			os << mat.at(row, col) << ' ';
 		}
 		
 		// if last row print ] instead of changing line
-		if(row < matrix.num_rows() - 1)
+		if(row < mat.num_rows() - 1)
 			os << '\n';
 		else
 			os << ']';
@@ -97,6 +95,53 @@ bool operator==(const matrix& left, const matrix& right)
 	}
 
 	return true;
+}
+
+matrix operator+(const matrix& left, const matrix& right)
+{
+	if(left.size() != right.size())
+	{
+		throw std::invalid_argument("matrix addition: non-matching sizes");
+	}
+
+	auto [num_rows, num_cols] = left.size();
+	matrix res(num_rows, num_cols);
+	
+	for(auto i = 0; i < num_rows; ++i)
+	{
+		for(auto j = 0; j < num_cols; ++j)
+		{
+			res.at(i, j) = left.at(i, j) + right.at(i, j);
+		}
+	}
+
+	return res;
+}
+
+matrix operator-(const matrix& left, const matrix& right)
+{
+	return left + (-right);
+}
+
+matrix operator-(const matrix& mat)
+{
+	auto [num_rows, num_cols] = mat.size();
+	matrix res(num_rows, num_cols);
+	
+	for(auto i = 0; i < num_rows; ++i)
+	{
+		for(auto j = 0; j < num_cols; ++j)
+		{
+			res.at(i, j) = -mat.at(i, j);
+		}
+	}
+
+	return res;
+}
+
+matrix operator*(const matrix& left, const matrix& right)
+{
+	return multiply(left, right);
 }
 
 } // namespace thwmakos
