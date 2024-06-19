@@ -70,9 +70,11 @@ class matrix
 			// that is, all rows should have the same amount of elements
 			m_num_rows = init_data.size();
 			m_num_columns = init_data.begin()->size();
-
-			assert(m_num_rows > 0);
-			assert(m_num_columns > 0);
+			
+			if(m_num_rows == 0 || m_num_columns == 0)
+			{
+				throw std::invalid_argument("number of rows or columns is zero");
+			}
 			
 			// allocate space and fill with default value
 			// TODO: can be improved by not defaulting all the elements?
@@ -81,7 +83,11 @@ class matrix
 			for(auto& row : init_data)
 			{
 				// ensure all columns have the same length
-				assert(static_cast<int>(row.size()) == m_num_columns);
+				if(static_cast<int>(row.size()) != m_num_columns)
+				{
+					throw std::invalid_argument("all rows must have the same number of elements");
+				}
+
 				m_data.insert(m_data.cend(), row);
 			}
 		}

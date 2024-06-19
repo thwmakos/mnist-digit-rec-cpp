@@ -36,6 +36,8 @@ TEST_CASE("testing matrix class")
 		
 	CHECK(mat1 != mat3);
 
+	REQUIRE_THROWS(mat1 = matrix {{2.0f, 3.0f}, {1.0f}});
+
 	// test multiplication with two random matrices
 	matrix left {{1.67,6.41,1.26,6.1},{2.31,3.75,10.1,1.7},{-3.3,-4.7,0.3,9.1},{0.7,-1.5,-3.8,1.5}};
 	matrix right {{6.1,-1.31,4.6,-3.1},{9.01,1.4,-6.4,3.1},{2.7,1.8,1.8,-2.6},{-0.5,1.2,6.1,-4.1}};

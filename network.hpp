@@ -30,7 +30,7 @@ constexpr std::array<FloatType, 3> network_layer_size = {28 * 28, 30, 10};
 struct network
 {
 	// default constructor, zero-initialises all the weights and biases
-	network();
+	explicit network();
 
 	// evaluate the network
 	// takes a column vector whose length must match the length of the input layer

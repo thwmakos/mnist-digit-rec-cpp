@@ -8,7 +8,6 @@
 
 // doctest testing library
 #ifndef NDEBUG
-#define DOCTEST_CONFIG_SUPER_FAST_ASSERTS
 #define DOCTEST_CONFIG_IMPLEMENT
 #else
 #define DOCTEST_CONFIG_DISABLE
