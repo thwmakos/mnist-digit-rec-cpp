@@ -114,10 +114,16 @@ class matrix
 			m_data.resize(m_num_rows * m_num_columns, FloatType {});
 		}
 
-
+		// get number of rows of the matrix
 		int num_rows() const { return m_num_rows; }
+
+		// get number of columns of the matrix
 		int num_cols() const { return m_num_columns; }
-		
+
+		// get the backing vector of the matrix containing all
+		// the entries
+		const std::vector<FloatType> &data() const { return m_data; }
+
 		// member function to access the matrix elements
 		// only being accessed with bounds checking for now
 		// TODO: disable bounds check after being done
