@@ -17,27 +17,10 @@
 namespace thwmakos {
 
 // calculates the function 1 / (1 + e^{-x}) 
-FloatType sigmoid(FloatType x)
-{
-	const auto one = static_cast<FloatType>(1.0);
-	return one / (one + std::exp(x));
-}
+FloatType sigmoid(FloatType x);
 
 // apply the sigmoid function to each element of the matrix
-matrix sigmoid(const matrix& mat)
-{
-	matrix res(mat.size());
-
-	for(auto row = 0; row < mat.num_rows(); ++row)
-	{
-		for(auto col = 0; col < mat.num_cols(); ++col)
-		{
-			res.at(row, col) = sigmoid(mat.at(row, col));
-		}
-	}
-
-	return res;
-}
+matrix sigmoid(const matrix& mat);
 
 // neural network layers determined at compile time
 // input and output layers are first and last elements
@@ -46,13 +29,13 @@ constexpr std::array<FloatType, 3> network_layer_size = {28 * 28, 30, 10};
 
 struct network
 {
-	network()
-	{
-		m_weights[0].set_size(network_layer_size[1], network_layer_size[0]);
-		m_weights[1].set_size(network_layer_size[2], network_layer_size[1]);
-		m_biases[0].set_size(network_layer_size[1], 1);
-		m_biases[1].set_size(network_layer_size[2], 1);
-	}
+	// default constructor, zero-initialises all the weights and biases
+	network();
+
+	// evaluate the network
+	// takes a column vector whose length must match the length of the input layer
+	// returns a vector representing the activation of the final layer
+	matrix evaluate(const matrix &input) const;
 
 	// weight matrices for every layer except first one
 	// the weights of a given neuron in layer are represented by a 
@@ -63,15 +46,6 @@ struct network
 	// first layer neurons do not have biases
 	std::array<matrix, network_layer_size.size() - 1> m_biases;
 
-	matrix evaluate(const matrix &input) const
-	{
-		matrix result {};	
-		
-		result = sigmoid(m_weights[0] * input  - m_biases[0]);
-		result = sigmoid(m_weights[1] * result - m_biases[1]);
-
-		return result;
-	}
 };
 
 } // namespace thwmakos

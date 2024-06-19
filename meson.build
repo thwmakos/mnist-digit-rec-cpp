@@ -5,6 +5,6 @@
 #
 project('mnist-digit-rec-cpp', 'cpp', version : '0.1')
 
-src = ['main.cpp', 'matrix.cpp']
+src = ['main.cpp', 'tests.cpp', 'matrix.cpp', 'network.cpp']
 
 executable('cli', sources : src, cpp_args : ['-std=c++20'])
