@@ -131,34 +131,45 @@ class matrix
 		const std::vector<FloatType> &data() const { return m_data; }
 
 		// member function to access the matrix elements
-		// only being accessed with bounds checking for now
-		// TODO: disable bounds check after being done
-		// TODO: at() is probably a bad name if I access value
-		//       without bounds check due to standard convention
+		// does bound checking
 		FloatType& at(int row, int col)
 		{
-			if constexpr(debug_build)
-				return m_data.at(row * m_num_columns + col);
-			else
-				return m_data[row * m_num_columns + col];
+			return m_data.at(row * m_num_columns + col);
 		}
 
 		FloatType at(int row, int col) const
 		{
+			return m_data.at(row * m_num_columns + col);
+		}
+
+		// member function to access the matrix elements
+		// does not do bound checking on debug builds
+		FloatType& operator()(int row, int col)
+		{
 			if constexpr(debug_build)
 				return m_data.at(row * m_num_columns + col);
 			else
 				return m_data[row * m_num_columns + col];
 		}
 
-		FloatType& operator()(int row, int col)
-		{
-			return at(row, col);
-		}
-
 		FloatType operator()(int row, int col) const
 		{
-			return at(row, col);
+			if constexpr(debug_build)
+				return m_data.at(row * m_num_columns + col);
+			else
+				return m_data[row * m_num_columns + col];
+		}
+		
+		// C++23 multiple subscript feature
+		// same as operator() 	
+		FloatType& operator[](int row, int col)
+		{
+			return operator()(row, col);
+		}
+
+		FloatType  operator[](int row, int col) const
+		{
+			return operator()(row, col);
 		}
 
 	private:

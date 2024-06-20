@@ -37,7 +37,7 @@ matrix multiply(const matrix& left, const matrix& right)
 			// equivalently we could check against right_num_rows
 			for(auto k = 0; k < left_num_cols; ++k)
 			{
-				product.at(i, j) += left.at(i, k) * right.at(k, j);
+				product(i, j) += left(i, k) * right(k, j);
 			}
 		}
 	}
@@ -58,7 +58,7 @@ std::ostream & operator<<(std::ostream &os, const matrix& mat)
 
 		for(auto col = 0; col < mat.num_cols(); ++col)
 		{
-			os << mat.at(row, col) << ' ';
+			os << mat(row, col) << ' ';
 		}
 		
 		// if last row print ] instead of changing line
@@ -85,7 +85,7 @@ bool operator==(const matrix& left, const matrix& right)
 		{
 			// if two elements are equal
 			// TODO: there are better way to check float equality
-			if(left.at(row, col) - right.at(row, col) >= 1.0e-5)
+			if(left(row, col) - right(row, col) >= 1.0e-5)
 			{
 				return false;
 			}
@@ -111,7 +111,7 @@ matrix operator+(const matrix& left, const matrix& right)
 	{
 		for(auto j = 0; j < num_cols; ++j)
 		{
-			res.at(i, j) = left.at(i, j) + right.at(i, j);
+			res(i, j) = left(i, j) + right(i, j);
 		}
 	}
 
@@ -132,7 +132,7 @@ matrix operator-(const matrix& mat)
 	{
 		for(auto j = 0; j < num_cols; ++j)
 		{
-			res.at(i, j) = -mat.at(i, j);
+			res(i, j) = -mat(i, j);
 		}
 	}
 

@@ -28,9 +28,9 @@ TEST_CASE("testing matrix class")
 
 	CHECK(mat1 == mat2);
 
-	mat2.at(1, 1) = 10.0f;
+	mat2(1, 1) = 10.0f;
 
-	CHECK(mat2.at(1, 1) == 10.0f);
+	CHECK(mat2(1, 1) == 10.0f);
 		
 	matrix mat3(4, 3);
 		

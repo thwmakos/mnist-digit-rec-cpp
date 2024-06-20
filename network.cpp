@@ -45,8 +45,16 @@ network::network()
 
 matrix network::evaluate(const matrix &input) const
 {
+	// check if input size is correct
+	// has to be equal to the number of input layers
+	if(input.num_rows() != m_weights[0].num_cols() ||
+		input.num_cols() != 1)
+	{
+		throw std::invalid_argument("expected column vector with length of input layer"); 
+	}
+
 	matrix result {};	
-	
+		
 	result = sigmoid(m_weights[0] * input  - m_biases[0]);
 	result = sigmoid(m_weights[1] * result - m_biases[1]);
 
