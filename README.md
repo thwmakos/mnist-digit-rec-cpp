@@ -6,3 +6,7 @@ avoiding external dependencies as much as possible. For personal
 research and learning, both theoretical and programming aspects.
 
 Training and test data are located in the `/data` directory.
+
+Using (so far):
+- C++23
+- `doctest` unit testing library
