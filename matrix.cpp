@@ -45,6 +45,25 @@ matrix multiply(const matrix& left, const matrix& right)
 	return product;
 }
 
+matrix transpose(const matrix &mat)
+{
+	// create the to be returned matrix with appropriate dimensions
+	matrix result(mat.num_cols(), mat.num_rows());
+
+	const auto [res_num_rows, res_num_cols] = result.size();	
+
+	for(auto i = 0; i < res_num_rows; ++i)
+	{
+		for(auto j = 0; j < res_num_cols; ++j)
+		{
+			// trying out C++23 multiple subscripts
+			result[i, j] = mat[j, i];
+		}
+	}
+
+	return result;
+}
+
 std::ostream & operator<<(std::ostream &os, const matrix& mat)
 {
 	// begin with [
@@ -104,7 +123,7 @@ matrix operator+(const matrix& left, const matrix& right)
 		throw std::invalid_argument("matrix addition: non-matching sizes");
 	}
 
-	auto [num_rows, num_cols] = left.size();
+	const auto [num_rows, num_cols] = left.size();
 	matrix res(num_rows, num_cols);
 	
 	for(auto i = 0; i < num_rows; ++i)
@@ -125,7 +144,7 @@ matrix operator-(const matrix& left, const matrix& right)
 
 matrix operator-(const matrix& mat)
 {
-	auto [num_rows, num_cols] = mat.size();
+	const auto [num_rows, num_cols] = mat.size();
 	matrix res(num_rows, num_cols);
 	
 	for(auto i = 0; i < num_rows; ++i)

@@ -37,6 +37,9 @@ TEST_CASE("testing matrix class")
 	CHECK(mat1 != mat3);
 
 	REQUIRE_THROWS(mat1 = matrix {{2.0f, 3.0f}, {1.0f}});
+	
+	// test transpose function
+	CHECK(transpose(mat1) == matrix {{1.0f, 4.0f, 7.0f}, {2.0f, 5.0f, 8.0f}, {3.0f, 6.0f, 9.0f}});
 
 	// test multiplication with two random matrices
 	matrix left {{1.67,6.41,1.26,6.1},{2.31,3.75,10.1,1.7},{-3.3,-4.7,0.3,9.1},{0.7,-1.5,-3.8,1.5}};

@@ -183,6 +183,8 @@ bool operator==(const matrix& left, const matrix& right);
 
 // multiply two matrices 
 matrix multiply(const matrix& left, const matrix& right);
+// return transpose of a matrix
+matrix transpose(const matrix &mat);
 
 // operator overloads
 matrix operator+(const matrix& left, const matrix& right);
