@@ -7,6 +7,6 @@ research and learning, both theoretical and programming aspects.
 
 Training and test data are located in the `/data` directory.
 
-Using (so far):
+Required to build (so far):
 - C++23
 - `doctest` unit testing library
