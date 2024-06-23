@@ -28,7 +28,7 @@ matrix sigmoid(const matrix& mat)
 	{
 		for(auto col = 0; col < mat.num_cols(); ++col)
 		{
-			res.at(row, col) = sigmoid(mat.at(row, col));
+			res[row, col] = sigmoid(mat[row, col]);
 		}
 	}
 

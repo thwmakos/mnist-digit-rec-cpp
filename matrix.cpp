@@ -17,8 +17,8 @@ matrix multiply(const matrix& left, const matrix& right)
 	// store these so we don't have to call num_rows() and num_cols()
 	// all the time, idk if this speeds up the functions, the above
 	// functions should be inlined anyway 
-	auto [left_num_rows, left_num_cols]   = left.size();
-	auto [right_num_rows, right_num_cols] = right.size();
+	const auto [left_num_rows, left_num_cols]   = left.size();
+	const auto [right_num_rows, right_num_cols] = right.size();
 
 	// make sure dimensions are matching
 	if(left_num_cols != right_num_rows)
@@ -35,10 +35,14 @@ matrix multiply(const matrix& left, const matrix& right)
 		for(auto j = 0; j < right_num_cols; ++j)
 		{
 			// equivalently we could check against right_num_rows
+			FloatType accumulator {}; 
+			
 			for(auto k = 0; k < left_num_cols; ++k)
 			{
-				product(i, j) += left(i, k) * right(k, j);
+				accumulator += left[i, k] * right[k, j];
 			}
+
+			product[i, j] = accumulator; 
 		}
 	}
 
@@ -77,7 +81,7 @@ std::ostream & operator<<(std::ostream &os, const matrix& mat)
 
 		for(auto col = 0; col < mat.num_cols(); ++col)
 		{
-			os << mat(row, col) << ' ';
+			os << mat[row, col] << ' ';
 		}
 		
 		// if last row print ] instead of changing line
@@ -104,7 +108,7 @@ bool operator==(const matrix& left, const matrix& right)
 		{
 			// if two elements are equal
 			// TODO: there are better way to check float equality
-			if(left(row, col) - right(row, col) >= 1.0e-5)
+			if(left[row, col] - right[row, col] >= 1.0e-5)
 			{
 				return false;
 			}
@@ -130,7 +134,7 @@ matrix operator+(const matrix& left, const matrix& right)
 	{
 		for(auto j = 0; j < num_cols; ++j)
 		{
-			res(i, j) = left(i, j) + right(i, j);
+			res[i, j] = left[i, j] + right[i, j];
 		}
 	}
 
@@ -151,7 +155,7 @@ matrix operator-(const matrix& mat)
 	{
 		for(auto j = 0; j < num_cols; ++j)
 		{
-			res(i, j) = -mat(i, j);
+			res[i, j] = -mat[i, j];
 		}
 	}
 

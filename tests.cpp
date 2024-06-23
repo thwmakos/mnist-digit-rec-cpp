@@ -28,7 +28,7 @@ TEST_CASE("testing matrix class")
 
 	CHECK(mat1 == mat2);
 
-	mat2(1, 1) = 10.0f;
+	mat2[1, 1] = 10.0f;
 
 	CHECK(mat2(1, 1) == 10.0f);
 		
@@ -69,7 +69,7 @@ TEST_CASE("testing network class")
 {
 	network nwk;
 
-	std::cout << "biases[1] \n" << nwk.m_biases[1].size().first << ' ' << nwk.m_biases[1].size().second << '\n';
+	//std::cout << "biases[1] \n" << nwk.m_biases[1].size().first << ' ' << nwk.m_biases[1].size().second << '\n';
 		
 	CHECK(nwk.m_weights[0].size() == std::make_pair(30, 28 * 28));
 	CHECK(nwk.m_weights[1].size() == std::make_pair(10, 30));
