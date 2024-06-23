@@ -7,6 +7,10 @@ research and learning, both theoretical and programming aspects.
 
 Training and test data are located in the `/data` directory.
 
-Required to build (so far):
+## Required to build (so far):
 - C++23
 - `doctest` unit testing library
+
+## Building
+- `meson setup builddir && cd builddir && meson compile`
+- to run tests, `./cli`
