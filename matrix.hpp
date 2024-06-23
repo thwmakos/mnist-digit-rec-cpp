@@ -178,13 +178,17 @@ class matrix
 		std::vector<FloatType> m_data;
 };
 
-std::ostream & operator<<(std::ostream &os, const matrix& matrix);
-bool operator==(const matrix& left, const matrix& right);
+std::ostream & operator<<(std::ostream&, const matrix&);
+bool operator==(const matrix&, const matrix&);
 
 // multiply two matrices 
-matrix multiply(const matrix& left, const matrix& right);
+matrix multiply(const matrix&, const matrix&);
 // return transpose of a matrix
-matrix transpose(const matrix &mat);
+matrix transpose(const matrix &);
+
+// multiply two matrices element wise, that is c_{ij} = a_{ij} * b_{ij}
+// matrices must have the same dimensions
+matrix elementwise_multiply(const matrix&, const matrix &);
 
 // operator overloads
 matrix operator+(const matrix& left, const matrix& right);

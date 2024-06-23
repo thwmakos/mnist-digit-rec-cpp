@@ -70,6 +70,27 @@ matrix transpose(const matrix &mat)
 	return result;
 }
 
+matrix elementwise_multiply(const matrix& left, const matrix& right)
+{
+	if(left.size() != right.size())
+	{
+		throw std::invalid_argument("elementwise_multiply: matrices must have same dimensions");
+	}	
+
+	const auto [num_rows, num_cols] = left.size();
+	matrix result(num_rows, num_cols);
+	
+	for(auto i = 0; i < num_rows; ++i)
+	{
+		for(auto j = 0; j < num_cols; ++j)
+		{
+			result[i, j] = left[i, j] * right[i, j];
+		}
+	}
+
+	return result;
+}
+
 std::ostream & operator<<(std::ostream &os, const matrix& mat)
 {
 	// begin with [
