@@ -49,6 +49,8 @@ matrix multiply(const matrix& left, const matrix& right)
 	return product;
 }
 
+// TODO: this is very slow, need to make this cache friendly
+// by splitting the matrix in blocks and transposing accordingly
 matrix transpose(const matrix &mat)
 {
 	// create the to be returned matrix with appropriate dimensions
