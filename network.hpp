@@ -19,8 +19,8 @@ namespace thwmakos {
 // calculates the function 1 / (1 + e^{-x}) 
 FloatType sigmoid(FloatType x);
 
-// apply the sigmoid function to each element of the matrix
-matrix sigmoid(const matrix& mat);
+// calculates derivative of sigmoid which is e^{-x} / (1 + e^{-x})^2
+FloatType sigmoid_derivative(FloatType x);
 
 // neural network layers determined at compile time
 // input and output layers are first and last elements

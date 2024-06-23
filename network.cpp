@@ -12,27 +12,22 @@
 
 namespace thwmakos {
 
-// calculates the function 1 / (1 + e^{-x}) 
+// calculates the function 1 / (1 + e^{-x})
+// TODO: add test for this function 
 FloatType sigmoid(FloatType x)
 {
 	const auto one = static_cast<FloatType>(1.0);
-	return one / (one + std::exp(x));
+	return one / (one + std::exp(-x));
 }
 
-// apply the sigmoid function to each element of the matrix
-matrix sigmoid(const matrix& mat)
+// calculates derivative of sigmoid
+// TODO: add test for this function too
+FloatType sigmoid_derivative(FloatType x)
 {
-	matrix res(mat.size());
+	const auto one = static_cast<FloatType>(1.0);	
+	const auto exp_minus_x = std::exp(-x);
 
-	for(auto row = 0; row < mat.num_rows(); ++row)
-	{
-		for(auto col = 0; col < mat.num_cols(); ++col)
-		{
-			res[row, col] = sigmoid(mat[row, col]);
-		}
-	}
-
-	return res;
+	return exp_minus_x / ((one + exp_minus_x) * (one + exp_minus_x));
 }
 
 network::network()
@@ -55,8 +50,8 @@ matrix network::evaluate(const matrix &input) const
 
 	matrix result {};	
 		
-	result = sigmoid(m_weights[0] * input  - m_biases[0]);
-	result = sigmoid(m_weights[1] * result - m_biases[1]);
+	result = elementwise_apply(m_weights[0] * input  - m_biases[0], [](FloatType x){return 1.0f; });
+	result = elementwise_apply(m_weights[1] * result - m_biases[1], sigmoid);
 
 	return result;
 }

@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <stdexcept>
+#include <concepts>
 #include <ostream>
 #include <cassert>
 
@@ -188,7 +189,26 @@ matrix transpose(const matrix &);
 
 // multiply two matrices element wise, that is c_{ij} = a_{ij} * b_{ij}
 // matrices must have the same dimensions
-matrix elementwise_multiply(const matrix&, const matrix &);
+matrix elementwise_multiply(const matrix&, const matrix&);
+
+// apply func to every element of the matrix
+// test concepts btw
+// TODO: add tests for this function
+matrix elementwise_apply(const matrix& mat, std::regular_invocable<FloatType> auto func)
+{
+	const auto [num_rows, num_cols] = mat.size();
+	matrix result(num_rows, num_cols);
+
+	for(auto i = 0; i < num_rows; ++i)
+	{
+		for(auto j = 0; j < num_cols; ++j)
+		{
+			result[i, j] = func(mat[i, j]);
+		}
+	}
+
+	return result;
+}
 
 // operator overloads
 matrix operator+(const matrix& left, const matrix& right);
