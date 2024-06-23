@@ -191,7 +191,7 @@ matrix transpose(const matrix &);
 // matrices must have the same dimensions
 matrix elementwise_multiply(const matrix&, const matrix&);
 
-// apply func to every element of the matrix
+// apply func to every element of the matrix and return a new matrix
 // test concepts btw
 // TODO: add tests for this function
 matrix elementwise_apply(const matrix& mat, std::regular_invocable<FloatType> auto func)

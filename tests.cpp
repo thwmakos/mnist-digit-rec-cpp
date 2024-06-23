@@ -35,13 +35,7 @@ TEST_CASE("testing matrix class")
 	matrix mat3(4, 3);
 		
 	CHECK(mat1 != mat3);
-
-	matrix mat5 {{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}};
-
-	CHECK(elementwise_multiply(mat5, mat5) == matrix {{1.0f, 4.0f}, {9.0f, 16.0f}, {25.0f, 36.0f}});
-
 	REQUIRE_THROWS(mat1 = matrix {{2.0f, 3.0f}, {1.0f}});
-	
 	// test transpose function
 	CHECK(transpose(mat1) == matrix {{1.0f, 4.0f, 7.0f}, {2.0f, 5.0f, 8.0f}, {3.0f, 6.0f, 9.0f}});
 
@@ -86,4 +80,17 @@ TEST_CASE("testing network class")
 	auto result = nwk.evaluate(input_vector);
 
 	CHECK(result.size() == std::make_pair(10, 1));
+}
+
+TEST_CASE("testing matrix functions")
+{
+	matrix mat1 {{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}};
+	
+	auto mat2 = elementwise_apply(mat1, [](FloatType x) { return 2.0 * x; });
+	
+	CHECK(mat2 == matrix {{2.0f, 4.0f},{6.0f, 8.0f},{10.0f, 12.0f}});
+	
+	matrix mat3 {{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}};
+
+	CHECK(elementwise_multiply(mat3, mat3) == matrix {{1.0f, 4.0f}, {9.0f, 16.0f}, {25.0f, 36.0f}});
 }
