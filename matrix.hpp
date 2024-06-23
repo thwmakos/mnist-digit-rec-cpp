@@ -193,7 +193,7 @@ matrix elementwise_multiply(const matrix&, const matrix&);
 
 // apply func to every element of the matrix and return a new matrix
 // test concepts btw
-// TODO: add tests for this function
+// TODO: add tests for this function -- DONE
 matrix elementwise_apply(const matrix& mat, std::regular_invocable<FloatType> auto func)
 {
 	const auto [num_rows, num_cols] = mat.size();

@@ -8,7 +8,8 @@
 
 #include "network.hpp"
 
-//#include <limits>
+#include <cmath>
+#include <random>
 
 namespace thwmakos {
 
@@ -32,10 +33,63 @@ FloatType sigmoid_derivative(FloatType x)
 
 network::network()
 {
+	// allocate space for the weight and bias matrices
 	m_weights[0].set_size(network_layer_size[1], network_layer_size[0]);
 	m_weights[1].set_size(network_layer_size[2], network_layer_size[1]);
 	m_biases[0].set_size(network_layer_size[1], 1);
 	m_biases[1].set_size(network_layer_size[2], 1);
+	
+	// initialise matrices with random normally distributed entries
+	std::random_device rd {}; 
+	std::default_random_engine eng { rd() };
+	std::normal_distribution<FloatType> normal(0.0f, 1.0f);
+	
+	// lambda to randomise an sequence of matrices using 
+	// the random distribution constructed above
+	auto randomise = [&normal, &eng] (auto& matrices)
+	{
+		for(auto&& mat : matrices)
+		{
+			const auto [num_rows, num_cols] = mat.size();
+
+			for(auto i = 0; i < num_rows; ++i)
+			{
+				for(auto j = 0; j < num_cols; ++j)	
+				{
+					mat[i, j] = normal(eng);
+				}
+			}
+		}
+	};
+
+	randomise(m_weights);
+	randomise(m_biases);
+
+	//for(auto weight_matrix : m_weights)
+	//{
+	//	const auto [num_rows, num_cols] = weight_matrix.size();
+
+	//	for(auto i = 0; i < num_rows; ++i)
+	//	{
+	//		for(auto j = 0; j < num_cols; ++j)	
+	//		{
+	//			weight_matrix[i, j] = normal(eng);
+	//		}
+	//	}
+	//}
+	//
+	//for(auto bias_matrix : m_biases)
+	//{
+	//	const auto [num_rows, num_cols] = bias_matrix.size();
+
+	//	for(auto i = 0; i < num_rows; ++i)
+	//	{
+	//		for(auto j = 0; j < num_cols; ++j)	
+	//		{
+	//			bias_matrix[i, j] = normal(eng);
+	//		}
+	//	}
+	//}
 }
 
 matrix network::evaluate(const matrix &input) const

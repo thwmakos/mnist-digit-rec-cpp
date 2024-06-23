@@ -12,7 +12,6 @@
 #include "matrix.hpp"
 
 #include <array>
-#include <cmath>
 
 namespace thwmakos {
 
@@ -29,13 +28,18 @@ constexpr std::array<FloatType, 3> network_layer_size = {28 * 28, 30, 10};
 
 struct network
 {
-	// default constructor, zero-initialises all the weights and biases
+	// default constructor, allocates matrices and initialises 
+	// all the weights and biases randomly from a normal distribution
 	explicit network();
 
 	// evaluate the network
 	// takes a column vector whose length must match the length of the input layer
 	// returns a vector representing the activation of the final layer
 	matrix evaluate(const matrix &input) const;
+
+	// train the model using mnist data
+	// internally uses the data_loader class
+	void train();
 
 	// weight matrices for every layer except first one
 	// the weights of a given neuron in layer are represented by a 

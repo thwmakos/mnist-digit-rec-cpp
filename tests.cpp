@@ -73,6 +73,8 @@ TEST_CASE("testing network class")
 	CHECK(nwk.m_weights[1].size() == std::make_pair(10, 30));
 	CHECK(nwk.m_biases[0].size() == std::make_pair(30, 1));
 	
+	//std::cout << nwk.m_biases[0] << '\n';
+
 	matrix input_vector(28 * 28, 1);
 
 	REQUIRE_NOTHROW(nwk.evaluate(input_vector));
@@ -80,6 +82,8 @@ TEST_CASE("testing network class")
 	auto result = nwk.evaluate(input_vector);
 
 	CHECK(result.size() == std::make_pair(10, 1));
+
+	//std::cout << result << '\n';
 }
 
 TEST_CASE("testing matrix functions")
