@@ -58,10 +58,49 @@ class matrix
 
 			m_data.resize(m_num_rows * m_num_columns, FloatType());
 		}
-
+		
+		// construct zero matrix with given size
 		explicit matrix(std::pair<int, int> mat_size) : 
 			matrix(mat_size.first, mat_size.second)
 		{}
+		
+		// construct a matrix from raw data, copying data argument into m_data
+		matrix(int num_rows, int num_columns, const std::vector<FloatType>& data) :
+			m_num_rows(num_rows),
+			m_num_columns(num_columns)
+		{
+			if(num_rows <= 0 || num_columns <= 0)
+			{
+				throw std::invalid_argument("number of rows and columns has to be strictly positive");
+			}
+			
+			if(static_cast<int>(data.size()) != m_num_rows * m_num_columns)
+			{
+				throw std::invalid_argument("data should have exactly num_rows * num_columns elemetns");
+			}
+			
+			// copy assignment
+			m_data = data;
+		}
+
+		// construct a matrix from raw data, moving data argument into m_data
+		matrix(int num_rows, int num_columns, std::vector<FloatType>&& data) :
+			m_num_rows(num_rows),
+			m_num_columns(num_columns)
+		{
+			if(num_rows <= 0 || num_columns <= 0)
+			{
+				throw std::invalid_argument("number of rows and columns has to be strictly positive");
+			}
+			
+			if(static_cast<int>(data.size()) != m_num_rows * m_num_columns)
+			{
+				throw std::invalid_argument("data should have exactly num_rows * num_columns elemetns");
+			}
+			
+			// move assignment
+			m_data = data;
+		}
 
 		// construct a matrix with given data
 		// each initializer list is a row, e.g. Matrix mat ({1, 2, 3}, {4, 5, 6}, {7, 8, 9});
