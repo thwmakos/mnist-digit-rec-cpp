@@ -15,10 +15,12 @@
 
 #include "matrix.hpp"
 #include "network.hpp"
+#include "data_loader.hpp"
 
 using thwmakos::FloatType;
 using thwmakos::matrix;
 using thwmakos::network;
+using thwmakos::data_loader;
 
 // try various tests on the Matrix class
 TEST_CASE("testing matrix class")
@@ -97,4 +99,11 @@ TEST_CASE("testing matrix functions")
 	matrix mat3 {{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}};
 
 	CHECK(elementwise_multiply(mat3, mat3) == matrix {{1.0f, 4.0f}, {9.0f, 16.0f}, {25.0f, 36.0f}});
+}
+
+TEST_CASE("testing data_loader")
+{
+	data_loader loader("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte");
+
+	CHECK(loader.m_num_images == 60000);
 }
