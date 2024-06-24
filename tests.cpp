@@ -63,6 +63,14 @@ TEST_CASE("testing matrix class")
 
 	matrix mat4;
 	CHECK(mat4.num_cols() == 0);
+
+	std::vector<FloatType> data5 { 5.0f, 10.0f, 15.0f, 20.0f, 25.0f, 30.0f }; 
+	REQUIRE_THROWS_AS(matrix(10, 10, data5), const std::invalid_argument&);
+
+	matrix mat5(3, 2, std::move(data5));
+
+	CHECK(mat5[0, 0] == 5.0f);
+	CHECK(mat5[2, 1] == 30.0f);
 }
 
 TEST_CASE("testing network class")
