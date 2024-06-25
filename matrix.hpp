@@ -174,12 +174,22 @@ class matrix
 		// does bound checking
 		FloatType& at(int row, int col)
 		{
-			return m_data.at(row * m_num_columns + col);
+			if(row < 0 || row >= m_num_rows || col < 0 || col >= m_num_columns)
+			{
+				throw std::out_of_range("matrix subscripts outs of range");
+			}
+
+			return m_data[row * m_num_columns + col];
 		}
 
 		FloatType at(int row, int col) const
 		{
-			return m_data.at(row * m_num_columns + col);
+			if(row < 0 || row >= m_num_rows || col < 0 || col >= m_num_columns)
+			{
+				throw std::out_of_range("matrix subscripts outs of range");
+			}
+
+			return m_data[row * m_num_columns + col];
 		}
 
 		// member function to access the matrix elements
@@ -187,7 +197,7 @@ class matrix
 		FloatType& operator()(int row, int col)
 		{
 			if constexpr(debug_build)
-				return m_data.at(row * m_num_columns + col);
+				return at(row, col);
 			else
 				return m_data[row * m_num_columns + col];
 		}
@@ -195,7 +205,7 @@ class matrix
 		FloatType operator()(int row, int col) const
 		{
 			if constexpr(debug_build)
-				return m_data.at(row * m_num_columns + col);
+				return at(row, col);
 			else
 				return m_data[row * m_num_columns + col];
 		}
