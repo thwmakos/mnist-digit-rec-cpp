@@ -12,6 +12,7 @@
 #include <doctest/doctest.h>
 
 #include <iostream>
+#include <format>
 
 #include "matrix.hpp"
 #include "network.hpp"
@@ -114,4 +115,10 @@ TEST_CASE("testing data_loader")
 	data_loader loader("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte");
 
 	CHECK(loader.m_num_images == 60000);
+
+	std::cout << std::format("training image data size: {}KiB\n", static_cast<float> (loader.m_image_data.size() / 1024.0f));
+	std::cout << std::format("training label data size: {}KiB\n", static_cast<float> (loader.m_label_data.size() / 1024.0f));
+
+	int label_index = 2001;
+	std::cout << std::format("loader.m_label_data[{}] = {}\n", label_index, loader.m_label_data.at(label_index));
 }

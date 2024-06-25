@@ -14,33 +14,35 @@
 #include <stdexcept>
 #include <algorithm>
 #include <array>
+#include <format>
 //#include <iostream>
 
 namespace thwmakos {
 
 data_loader::data_loader(const std::string& image_filename, const std::string& label_filename)
 {
-	// find out filesize
-	std::filesystem::path image_filepath { image_filename };
-	// filesize, in bytes
-	const auto length = std::filesystem::file_size(image_filepath);
+	std::ifstream image_file, label_file;
 
-	if(length <= s_image_file_offset)
+	// return an ifstream and find out filesize
+	auto open_file_and_find_filesize = [] (std::ifstream &file, const std::string& filename)
 	{
-		throw std::runtime_error("empty of malformed file");
-	}
+		std::filesystem::path filepath { filename };
+		const auto filesize = std::filesystem::file_size(filepath);
+		file.open(filename, std::ios::in | std::ios::binary);
+		
+		if(!file.is_open())
+		{
+			throw std::runtime_error(std::format("cannot open file {}", filename));
+		}
+		
+		// seek in the beginning of file to be ready to use
+		file.seekg(0, std::ios::beg);
+		
+		return filesize;
+	};
 
-	std::ifstream image_file(image_filename, std::ios::in | std::ios::binary);
-
-	if(!image_file.is_open())
-	{
-		throw std::runtime_error("cannot open training image file");
-	}
-	
-	image_file.seekg(0, std::ios::beg);
-	
 	// read 4 bytes from file and convert them to an int32_t
-	auto read_int32_t = [] (std::ifstream &file)
+	auto read_int32_t = [] (std::ifstream& file)
 	{
 		// the number will be read here
 		int32_t number = 0;		
@@ -57,25 +59,74 @@ data_loader::data_loader(const std::string& image_filename, const std::string& l
 
 		return number;
 	};
+	
+	// load training image data
+	// convert to int intentionally
+	int image_length = open_file_and_find_filesize(image_file, image_filename);
 
+	if(image_length <= s_image_file_offset)
+	{
+		throw std::runtime_error("empty of malformed file");
+	}
+	
+	// check file header
+	// see data_loader.hpp for file structure
 	int32_t magic_number = read_int32_t(image_file);
 
 	if(magic_number != s_image_magic_number)
 	{
-		throw std::runtime_error("mismatched magic numbers");
+		throw std::runtime_error(std::format("mismatched magic number for file {}", image_filename));
 	}
 
 	m_num_images = static_cast<int>(read_int32_t(image_file));
-	
-	if(s_num_rows != static_cast<int>(read_int32_t(image_file)) ||
-	  s_num_cols != static_cast<int>(read_int32_t(image_file)))
+	const auto num_rows = static_cast<int>(read_int32_t(image_file));
+	const auto num_cols = static_cast<int>(read_int32_t(image_file));	
+
+	if(s_num_rows != num_rows || s_num_cols != num_cols)
 	{
 		throw std::runtime_error("expected 28x28 training images");
+	}
+
+	// check if file is properly sized
+	const auto expected_data_size = m_num_images * s_image_size;
+	if(expected_data_size != image_length - s_image_file_offset)
+	{
+		throw std::runtime_error(std::format("expected data size: {}, actual size: {}",
+					expected_data_size, image_length - s_image_file_offset));
 	}
 		
 	// resize vector to fit all the image data
 	// there are offset-many bytes in the beginning that are not image data	
-	m_image_data.resize(length - s_image_file_offset);
+	m_image_data.resize(expected_data_size);
+	// read form current position to the end of file
+	image_file.read(reinterpret_cast<char *>(m_image_data.data()), expected_data_size);
+
+	// load label data
+	int label_length = open_file_and_find_filesize(label_file, label_filename);
+	// check label magic number
+	magic_number = read_int32_t(label_file);	
+	
+	if(magic_number != s_label_magic_number)
+	{
+		throw std::runtime_error(std::format("mismatched magic number for file {}", image_filename));
+	}
+		
+	m_num_labels = static_cast<int>(read_int32_t(label_file));
+
+	if(m_num_images != m_num_labels)
+	{
+		throw std::runtime_error("different number of images and labels");
+	}
+
+	const auto expected_label_size = m_num_labels;
+	if(expected_label_size != label_length - s_label_file_offset)
+	{
+		throw std::runtime_error(std::format("expected label size: {}, actual size: {}",
+					expected_label_size, label_length - s_label_file_offset));
+	}
+
+	m_label_data.resize(expected_label_size);
+	label_file.read(reinterpret_cast<char *>(m_label_data.data()), expected_label_size);
 }
 
 } // namespace thwmakos

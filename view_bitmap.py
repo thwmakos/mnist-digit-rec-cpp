@@ -12,10 +12,10 @@ with open(file, 'rb') as f:
     tdata = np.fromfile(f, dtype=np.uint8)
 
 offset = 16 # image data begin at this offset
-image_index = 1299 # change this to display the training image at the given index
+image_index = 2001 # change this to display the training image at the given index
 image_size = 28 * 28 # how many bytes for each image
 
-data_begin = offset + (image_index - 1) * image_size
+data_begin = offset + image_index * image_size
 data_end = data_begin + image_size
 
 image_array = tdata[data_begin:data_end] # grab the image bitmap
