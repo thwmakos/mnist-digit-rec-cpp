@@ -8,6 +8,7 @@
 //
 
 #include "data_loader.hpp"
+#include "matrix.hpp"
 
 #include <fstream>
 #include <filesystem>
@@ -127,6 +128,31 @@ data_loader::data_loader(const std::string& image_filename, const std::string& l
 
 	m_label_data.resize(expected_label_size);
 	label_file.read(reinterpret_cast<char *>(m_label_data.data()), expected_label_size);
+}
+
+std::pair<matrix, matrix> data_loader::get_sample(int index) const
+{
+	if(index < 0 || index >= m_num_images)
+	{
+		throw std::out_of_range("get_training_sample: index out of range");
+	}
+
+	// locate the data in the m_image_data vector
+	// each image requires s_image_size elements of a vector	
+	auto data_begin = m_image_data.cbegin() + index * s_image_size;
+	auto data_end   = data_begin + s_image_size;
+	// extract image data
+	std::vector<FloatType> image_data(data_begin, data_end);
+	// each entry in image_data is between 0.0f and 255.0f, which 0 being black and 255 white
+	// we need to map these [0.0f, 1.0f]
+	std::for_each(image_data.begin(), image_data.end(), [](FloatType &x) { x = x / 255.0f; });
+	
+	// create the to be returned pair
+	auto sample = std::make_pair(matrix(s_image_size, 1, std::move(image_data)), matrix(10, 1));
+	// set the corresponding entry of label matrix (i.e. column vector) to one
+	sample.second[static_cast<int>(m_label_data.at(index)), 0] = 1.0f;
+
+	return sample;
 }
 
 } // namespace thwmakos

@@ -49,10 +49,12 @@ class data_loader
     public:
 		data_loader(const std::string& image_filename, const std::string& label_filename);
 	
-		// get a training image (as a column vector, with one row after another)
-		// and the corresponding label,
+		// get a training sample consisting 
+		// - of an image (as a column vector of 28 * 28 entries, with one row after another)
+		// - the corresponding label (as a column vector of 10 entries)
+		//
 		// index can be from 0 up to num_samples() 	
-		std::pair<matrix, int> get_training_image(int index) const;
+		std::pair<matrix, matrix> get_sample(int index) const;
 		
 		// get number of training examples
 		// m_num_images should always be equal to m_num_labels and this
