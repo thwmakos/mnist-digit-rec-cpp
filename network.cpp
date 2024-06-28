@@ -87,7 +87,10 @@ matrix network::evaluate(const matrix &input) const
 
 void network::train()
 {
-	data_loader dl{"../data/train-images-idx3-ubyte", "./data/train-labels-idx1-ubyte"};
+	constexpr auto images = "../data/train-images-idx3-ubyte";
+	constexpr auto labels = "../data/train-labels-idx1-ubyte";
+
+	data_loader dl(images, labels);
 }
 
 } // namespace thwmakos
