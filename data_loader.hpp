@@ -40,9 +40,20 @@
 #include <string>
 #include <cstdint>
 
+#include "matrix.hpp"
+
 namespace thwmakos {
 
-class matrix;
+// represents a training sample consisting 
+// - of an image (as a column vector of 28 * 28 entries, with one row after another)
+// - the corresponding label (as a column vector of 10 entries)
+//
+// index can be from 0 up to num_samples() 	
+struct training_sample
+{
+	matrix image;
+	matrix label;
+};
 
 class data_loader
 {
@@ -54,7 +65,7 @@ class data_loader
 		// - the corresponding label (as a column vector of 10 entries)
 		//
 		// index can be from 0 up to num_samples() 	
-		std::pair<matrix, matrix> get_sample(int index) const;
+		training_sample get_sample(int index) const;
 		
 		// get number of training examples
 		// m_num_images should always be equal to m_num_labels and this

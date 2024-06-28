@@ -130,7 +130,7 @@ data_loader::data_loader(const std::string& image_filename, const std::string& l
 	label_file.read(reinterpret_cast<char *>(m_label_data.data()), expected_label_size);
 }
 
-std::pair<matrix, matrix> data_loader::get_sample(int index) const
+training_sample data_loader::get_sample(int index) const
 {
 	if(index < 0 || index >= m_num_images)
 	{
@@ -147,10 +147,13 @@ std::pair<matrix, matrix> data_loader::get_sample(int index) const
 	// we need to map these [0.0f, 1.0f]
 	std::for_each(image_data.begin(), image_data.end(), [](FloatType &x) { x = x / 255.0f; });
 	
-	// create the to be returned pair
-	auto sample = std::make_pair(matrix(s_image_size, 1, std::move(image_data)), matrix(10, 1));
+	// create the to be returned sample
+	// FIXME: there should not be any unnecessary copies or movies using the training_sample
+	// struct
+	training_sample sample = { matrix(s_image_size, 1, std::move(image_data)), 
+		matrix(10, 1) };
 	// set the corresponding entry of label matrix (i.e. column vector) to one
-	sample.second[static_cast<int>(m_label_data.at(index)), 0] = 1.0f;
+	sample.label[static_cast<int>(m_label_data.at(index)), 0] = 1.0f;
 
 	return sample;
 }

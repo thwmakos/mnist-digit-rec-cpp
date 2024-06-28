@@ -123,6 +123,6 @@ TEST_CASE("testing data_loader")
 	std::cout << std::format("loader.m_label_data[{}] = {}\n", label_index, loader.m_label_data.at(label_index));
 
 	auto sample = loader.get_sample(label_index);
-	CHECK(sample.second[loader.m_label_data[label_index], 0] == 1.0f);
+	CHECK(sample.label[loader.m_label_data[label_index], 0] == 1.0f);
 
 }
