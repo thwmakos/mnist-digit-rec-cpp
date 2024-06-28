@@ -7,6 +7,7 @@
 //
 
 #include "network.hpp"
+#include "data_loader.hpp"
 
 #include <cmath>
 #include <random>
@@ -64,32 +65,6 @@ network::network()
 
 	randomise(m_weights);
 	randomise(m_biases);
-
-	//for(auto weight_matrix : m_weights)
-	//{
-	//	const auto [num_rows, num_cols] = weight_matrix.size();
-
-	//	for(auto i = 0; i < num_rows; ++i)
-	//	{
-	//		for(auto j = 0; j < num_cols; ++j)	
-	//		{
-	//			weight_matrix[i, j] = normal(eng);
-	//		}
-	//	}
-	//}
-	//
-	//for(auto bias_matrix : m_biases)
-	//{
-	//	const auto [num_rows, num_cols] = bias_matrix.size();
-
-	//	for(auto i = 0; i < num_rows; ++i)
-	//	{
-	//		for(auto j = 0; j < num_cols; ++j)	
-	//		{
-	//			bias_matrix[i, j] = normal(eng);
-	//		}
-	//	}
-	//}
 }
 
 matrix network::evaluate(const matrix &input) const
@@ -108,6 +83,11 @@ matrix network::evaluate(const matrix &input) const
 	result = elementwise_apply(m_weights[1] * result - m_biases[1], sigmoid);
 
 	return result;
+}
+
+void network::train()
+{
+	data_loader dl{"../data/train-images-idx3-ubyte", "./data/train-labels-idx1-ubyte"};
 }
 
 } // namespace thwmakos

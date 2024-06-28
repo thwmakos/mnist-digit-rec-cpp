@@ -47,7 +47,7 @@ class matrix;
 class data_loader
 {
     public:
-		data_loader(const std::string& image_filename, const std::string& label_filename);
+		explicit data_loader(const std::string& image_filename, const std::string& label_filename);
 	
 		// get a training sample consisting 
 		// - of an image (as a column vector of 28 * 28 entries, with one row after another)
@@ -61,7 +61,8 @@ class data_loader
 		// is checked in the constructor
 		int num_samples() const { return m_num_images; }
 
-		data_loader() : m_num_images(0), m_num_labels(0) {}
+		//data_loader() : m_num_images(0), m_num_labels(0) {}
+		data_loader() = delete;
 		data_loader(const data_loader&) = delete;
 		data_loader(data_loader&&) = delete;
 		data_loader& operator=(const data_loader&) = delete;
