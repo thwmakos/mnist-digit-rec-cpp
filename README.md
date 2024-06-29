@@ -10,7 +10,8 @@ Training and test data are located in the `/data` directory.
 ## Required to build (so far):
 - C++23
 - `doctest` unit testing library
+- Qt6 with the `Core, Gui, Quick, Qml` modules for the GUI
 
 ## Building
-- `meson setup builddir && cd builddir && meson compile`
-- to run tests, `./cli`
+- For testing use the `cli` target: `meson setup builddir && cd builddir && meson compile` and run `./cli`
+- For the Qt6 interface use the `gui` target and run `./gui`
