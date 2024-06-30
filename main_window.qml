@@ -1,5 +1,5 @@
-import QtQuick 6.7
-import QtQuick.Controls 6.7
+import QtQuick 6.0
+import QtQuick.Controls 6.0
 
 
 Canvas {
@@ -10,8 +10,16 @@ Canvas {
 
     onPaint: {
         var ctx = getContext("2d");
+
+		// fill background with black
+		ctx.fillStyle = "black";
+		ctx.fillRect(0, 0, width, height);
+		
+		// drawing color is white
         ctx.lineWidth = 3;
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = "white";
+
+		// 
         ctx.beginPath();
         for (var i = 0; i < points.length - 1; i++) {
             ctx.moveTo(points[i].x, points[i].y);
