@@ -50,18 +50,27 @@ Canvas {
 		spacing: 5
 		
 		Button {
-			id: quitButton
-			text: "Quit"
+			id: button_clear
+			text: "Clear"
 			onClicked: {
-				Qt.quit();
-			}
+				canvas.points = [];
+				canvas.requestPaint();
+			}	
 		}
 
 		Button {
-			id: saveButton
+			id: button_save
 			text: "Save"
 			onClicked: {
 				var image = canvas.save("image.png");
+			}
+		}
+		
+		Button {
+			id: button_quit
+			text: "Quit"
+			onClicked: {
+				Qt.quit();
 			}
 		}
 
