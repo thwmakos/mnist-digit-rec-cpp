@@ -1,5 +1,7 @@
 # mnist-digit-rec-cpp
 
+**work in progress**
+
 Implementation of the classic neural network that recognises
 handwritten digits, trained on the MNIST dataset in pure C++23
 avoiding external dependencies as much as possible. For personal
