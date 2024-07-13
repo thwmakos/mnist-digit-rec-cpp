@@ -45,7 +45,7 @@ matrix multiply(const matrix& left, const matrix& right)
 			
 			for(auto k = 0; k < left_num_cols; ++k)
 			{
-				accumulator += left[i, k] * right[k, j];
+				accumulator += left[i, k] * right_transpose[j, k];
 			}
 
 			product[i, j] = accumulator; 
