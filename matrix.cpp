@@ -28,8 +28,14 @@ matrix multiply(const matrix& left, const matrix& right)
 	
 	matrix product(left_num_rows, right_num_cols);
 	
-	// naive implementation O(n^3) of matrix multiplication
+	// naive implementation of matrix multiplication
 	// TODO: good learning opportunity for intrinsics here
+	
+	// transpose right first to ensure sequential access 
+	// to matrix elements
+	// uses more memory but is ~4 times faster for large matrices
+	auto right_transpose = transpose(right);
+	
 	for(auto i = 0; i < left_num_rows; ++i)
 	{
 		for(auto j = 0; j < right_num_cols; ++j)
