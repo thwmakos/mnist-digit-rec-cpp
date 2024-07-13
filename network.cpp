@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include <random>
+#include <iostream>
 
 namespace thwmakos {
 
@@ -30,6 +31,14 @@ FloatType sigmoid_derivative(FloatType x)
 	const auto exp_minus_x = std::exp(-x);
 
 	return exp_minus_x / ((one + exp_minus_x) * (one + exp_minus_x));
+}
+
+// returns a column vector with the partial derivatives of the cost function
+// in notation this returns \pdv{C_x}{a^L} for the sample (x, y)
+// where a^L is output_activations and y is label 
+matrix cost_derivative(const matrix& output_activations, const matrix& label)
+{
+	return output_activations - label;
 }
 
 network::network()
@@ -67,7 +76,7 @@ network::network()
 	randomise(m_biases);
 }
 
-matrix network::evaluate(const matrix &input) const
+matrix network::evaluate(const matrix& input) const
 {
 	// check if input size is correct
 	// has to be equal to the number of input layers
@@ -79,7 +88,7 @@ matrix network::evaluate(const matrix &input) const
 
 	matrix result {};	
 		
-	result = elementwise_apply(m_weights[0] * input  - m_biases[0], [](FloatType x){return 1.0f; });
+	result = elementwise_apply(m_weights[0] * input  - m_biases[0], sigmoid);
 	result = elementwise_apply(m_weights[1] * result - m_biases[1], sigmoid);
 
 	return result;
@@ -91,6 +100,57 @@ void network::train()
 	constexpr auto labels = "../data/train-labels-idx1-ubyte";
 
 	data_loader dl(images, labels);
+}
+
+network::gradient network::backpropagation(const training_sample& sample) const
+{
+	network::gradient grad;
+	
+	// forward pass
+	
+	// calculate the activations at each layer
+	std::vector<matrix> activations; // this is a^l from Nielsen
+	std::vector<matrix> weighted_inputs; // this is z^l from Nielsen
+
+	// activation at the first layer is input
+	activations.push_back(sample.image);
+
+	// calculate activations and weighted inputs (a^l and z^l) at each layer
+	// in notation, we do this: z^l = w^l \cdot a^{l-1} + b^l and a^l = \sigma (z^l)
+	for(auto [weight_it, bias_it] = std::tuple { std::cbegin(m_weights), std::cbegin(m_biases) };
+			weight_it != std::cend(m_weights); // m_weights and m_biases have the same size
+			++weight_it, ++bias_it)
+	{
+		std::cout << "network::backpropagation: activations.size() = "
+		   << activations.size() << '\n';	   
+		// this improves readability I think
+		const matrix& last_activation = *std::prev(std::cend(activations));
+		const matrix& weight          = *weight_it;
+		const matrix& bias            = *bias_it;
+		
+		std::cout << "network::backpropagation: weight.size() = " 
+			<< weight.num_rows()
+			<< ", " 
+			<< weight.num_cols() << '\n';
+		std::cout << "network::backpropagation: last_activation.size() = " 
+			<< last_activation.num_rows()
+			<< ", " 
+			<< last_activation.num_cols() << '\n';
+	
+		weighted_inputs.emplace_back(multiply(weight, last_activation) + bias);	
+		activations.emplace_back(elementwise_apply(*std::prev(std::cend(weighted_inputs)), sigmoid));
+	}
+	
+	// backward pass
+	// we start from the final layer and calculate δ^l_j = \pdv{C_x}{z^l_j}
+	// using the formula δ^l = (w^{l+1})^T δ^{l+1} \odot σ'(z^l),
+	// starting from δ^L = (a^L - y) \odot σ'(z^L) where L is the number of layers
+	
+	// start by calculating δ^L 	
+	matrix delta = elementwise_multiply(cost_derivative(*std::prev(std::cend(activations)), sample.label),
+			elementwise_apply(*std::prev(std::cend(weighted_inputs)), sigmoid_derivative));
+	
+	return grad;
 }
 
 } // namespace thwmakos

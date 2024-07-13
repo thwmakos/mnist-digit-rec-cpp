@@ -126,3 +126,21 @@ TEST_CASE("testing data_loader")
 	CHECK(sample.label[loader.m_label_data[label_index], 0] == 1.0f);
 
 }
+
+TEST_CASE("testing backpropagation function")
+{
+	data_loader loader("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte");
+
+	network nwk;
+	
+	std::cout << "testing backpropagation:\n";
+	std::cout << "random biases of last layer:\n";
+	std::cout << nwk.m_biases[1] << '\n';
+	
+	network::gradient grad;
+	
+	REQUIRE_NOTHROW(grad = nwk.backpropagation(loader.get_sample(1)));
+	
+	std::cout << "grad.biases[1]:\n";
+	std::cout << grad.biases[1] << '\n';
+}
