@@ -122,10 +122,8 @@ network::gradient network::backpropagation(const training_sample& sample) const
 			++weight_it, ++bias_it)
 	{
 		const matrix& last_activation = *std::prev(std::cend(activations));
-		const matrix& weight          = *weight_it;
-		const matrix& bias            = *bias_it;
 		
-		weighted_inputs.emplace_back(multiply(weight, last_activation) + bias);	
+		weighted_inputs.emplace_back(multiply(*weight_it, last_activation) + *bias_it);	
 		activations.emplace_back(elementwise_apply(*std::prev(std::cend(weighted_inputs)), sigmoid));
 	}
 	
