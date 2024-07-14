@@ -121,22 +121,10 @@ network::gradient network::backpropagation(const training_sample& sample) const
 			weight_it != std::cend(m_weights); // m_weights and m_biases have the same size
 			++weight_it, ++bias_it)
 	{
-		std::cout << "network::backpropagation: activations.size() = "
-		   << activations.size() << '\n';	   
-		// this improves readability I think
 		const matrix& last_activation = *std::prev(std::cend(activations));
 		const matrix& weight          = *weight_it;
 		const matrix& bias            = *bias_it;
 		
-		std::cout << "network::backpropagation: weight.size() = " 
-			<< weight.num_rows()
-			<< ", " 
-			<< weight.num_cols() << '\n';
-		std::cout << "network::backpropagation: last_activation.size() = " 
-			<< last_activation.num_rows()
-			<< ", " 
-			<< last_activation.num_cols() << '\n';
-	
 		weighted_inputs.emplace_back(multiply(weight, last_activation) + bias);	
 		activations.emplace_back(elementwise_apply(*std::prev(std::cend(weighted_inputs)), sigmoid));
 	}
@@ -145,10 +133,56 @@ network::gradient network::backpropagation(const training_sample& sample) const
 	// we start from the final layer and calculate δ^l_j = \pdv{C_x}{z^l_j}
 	// using the formula δ^l = (w^{l+1})^T δ^{l+1} \odot σ'(z^l),
 	// starting from δ^L = (a^L - y) \odot σ'(z^L) where L is the number of layers
+	// then the partial derivatives \pdv{C}{w^l_{kj}} can be found in terms of 
+	// δ^l and the other quantities we have already calculated
 	
+	auto activation_it     = std::crbegin(activations);
+	auto weighted_input_it = std::crbegin(weighted_inputs);
+	auto weight_it         = std::crbegin(m_weights);
+
+	auto grad_weight_it = std::rbegin(grad.weights);
+	auto grad_bias_it   = std::rbegin(grad.biases);
+
 	// start by calculating δ^L 	
-	matrix delta = elementwise_multiply(cost_derivative(*std::prev(std::cend(activations)), sample.label),
-			elementwise_apply(*std::prev(std::cend(weighted_inputs)), sigmoid_derivative));
+	matrix delta = elementwise_multiply(cost_derivative(*activation_it, sample.label),
+			elementwise_apply(*weighted_input_it, sigmoid_derivative));
+
+	// note that δ^l and z^l have the same index in the formula , so first advance the (reverse)
+	// iterator
+	++activation_it;
+	
+	// \pdv{C}{b^l} = δ^l
+	*grad_bias_it = delta;
+	// \pdv{C}{w^l_{jk} = a^{l-1}_k δ^l_j
+	*grad_weight_it = multiply(
+			delta,
+			transpose(*activation_it));
+	
+	++grad_weight_it;
+	++grad_bias_it;	
+	++activation_it;
+	++weighted_input_it;
+
+	// grad.weights and grad.biases have the same number of elements which is
+	// network_layer_size.size() - 1, the same number as m_weights, m_biases and weighted_inputs
+	//
+	// activations has one extra element at the beginning (the sample.image), so total number of
+	// elements is network_layer_size.size()
+	while(grad_weight_it != std::rend(grad.weights))
+	{
+		delta = elementwise_multiply(
+				multiply(transpose(*weight_it), delta),
+				elementwise_apply(*weighted_input_it, sigmoid_derivative));
+
+		*grad_bias_it = delta;
+		*grad_weight_it = multiply(delta, transpose(*activation_it));
+		
+		++grad_weight_it;
+		++grad_bias_it;	
+		++activation_it;
+		++weighted_input_it;
+		++weight_it;
+	}
 	
 	return grad;
 }

@@ -133,14 +133,20 @@ TEST_CASE("testing backpropagation function")
 
 	network nwk;
 	
-	std::cout << "testing backpropagation:\n";
-	std::cout << "random biases of last layer:\n";
-	std::cout << nwk.m_biases[1] << '\n';
+	//std::cout << "testing backpropagation:\n";
+	//std::cout << "random biases of last layer:\n";
+	//std::cout << nwk.m_biases[1] << '\n';
 	
 	network::gradient grad;
 	
 	REQUIRE_NOTHROW(grad = nwk.backpropagation(loader.get_sample(1)));
 	
-	std::cout << "grad.biases[1]:\n";
-	std::cout << grad.biases[1] << '\n';
+	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());
+	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());
+	CHECK(grad.weights[1].num_cols() == nwk.m_weights[1].num_cols());
+	CHECK(grad.weights[1].num_cols() == nwk.m_weights[1].num_cols());
+	CHECK(grad.biases[0].num_rows() == nwk.m_biases[0].num_rows());
+	CHECK(grad.biases[0].num_rows() == nwk.m_biases[0].num_rows());
+	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
+	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 }
