@@ -196,4 +196,19 @@ matrix operator*(const matrix& left, const matrix& right)
 	return multiply(left, right);
 }
 
+matrix operator*(FloatType scalar, const matrix& mat)
+{
+	matrix res(mat.size());
+
+	for(auto row = 0; row < mat.num_rows(); ++row)
+	{
+		for(auto col = 0; col < mat.num_cols(); col++)
+		{
+			res[row, col] = scalar * mat[row, col];	
+		}
+	}
+
+	return res;
+}
+
 } // namespace thwmakos

@@ -260,10 +260,19 @@ matrix elementwise_apply(const matrix& mat, std::regular_invocable<FloatType> au
 }
 
 // operator overloads
+
+// add/subtract two matrices together (element-wise)
 matrix operator+(const matrix& left, const matrix& right);
 matrix operator-(const matrix& left, const matrix& right);
+
+// unary minus, negates every element
 matrix operator-(const matrix& mat);
+
+// matrix multiplication
 matrix operator*(const matrix& left, const matrix& right);
+
+// multiply a matrix by a scalar (element-wise)
+matrix operator*(FloatType scalar, const matrix& mat);
 
 } // namespace thwmakos
 

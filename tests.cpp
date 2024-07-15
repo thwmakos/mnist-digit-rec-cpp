@@ -56,6 +56,7 @@ TEST_CASE("testing matrix class")
 
 	CHECK(product == expected_product);	
 	CHECK(left * right == product);
+	CHECK(3.0f * left * right == product + product + product);
 
 	REQUIRE_THROWS_AS(multiply(mat1, mat3), const std::invalid_argument&);
 
@@ -72,6 +73,9 @@ TEST_CASE("testing matrix class")
 
 	CHECK(mat5[0, 0] == 5.0f);
 	CHECK(mat5[2, 1] == 30.0f);
+
+	CHECK(mat5 + mat5 == 2.0f * mat5);
+	CHECK(((2.0f * mat5) - mat5) == mat5);
 }
 
 TEST_CASE("testing network class")
