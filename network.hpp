@@ -12,6 +12,7 @@
 #include "matrix.hpp"
 
 #include <array>
+#include <span>
 
 namespace thwmakos {
 
@@ -23,6 +24,7 @@ FloatType sigmoid_derivative(FloatType x);
 
 // forward declaration from data_loader.hpp
 struct training_sample;
+class data_loader;
 
 // neural network layers determined at compile time
 // input and output layers are first and last elements
@@ -43,7 +45,10 @@ class network
 
 		// train the model using mnist data
 		// internally uses the data_loader class
-		void train();
+		// performs 'epochs' number of stochastic gradient descent steps
+		// each using batch_size number of variables, at each step moving
+		// by 'learning_rate' towards the direction of steepest descent
+		void train(int epochs, int batch_size, FloatType learning_rate);
 
 	//private:
 	
@@ -73,7 +78,7 @@ class network
 		};
 
 		// minimise cost function based on the arguments	
-		void stochastic_gradient_descent();
+		void stochastic_gradient_descent(const data_loader& dl, std::span<const int> sample_indices, FloatType learning_rate);
 
 		// adjust weights and biases for a single training sample
 		gradient backpropagation(const training_sample&) const;

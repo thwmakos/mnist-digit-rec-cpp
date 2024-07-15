@@ -127,19 +127,22 @@ TEST_CASE("testing data_loader")
 
 }
 
-TEST_CASE("testing backpropagation function")
+TEST_CASE("testing network training")
 {
-	data_loader loader("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte");
-
 	network nwk;
 	
 	//std::cout << "testing backpropagation:\n";
 	//std::cout << "random biases of last layer:\n";
 	//std::cout << nwk.m_biases[1] << '\n';
 	
+	// test if dimensions check in backpropagation()
+	// using a dummy sample	
 	network::gradient grad;
-	
-	REQUIRE_NOTHROW(grad = nwk.backpropagation(loader.get_sample(1)));
+	thwmakos::training_sample sample;
+	sample.image = matrix(28 * 28, 1);
+	sample.label = matrix(10, 1);
+
+	REQUIRE_NOTHROW(grad = nwk.backpropagation(sample));
 	
 	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());
 	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());
@@ -149,4 +152,6 @@ TEST_CASE("testing backpropagation function")
 	CHECK(grad.biases[0].num_rows() == nwk.m_biases[0].num_rows());
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
+
+	nwk.train(2, 10, 0.1f);
 }

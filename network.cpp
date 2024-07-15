@@ -11,6 +11,8 @@
 
 #include <cmath>
 #include <random>
+#include <algorithm>
+#include <span>
 #include <iostream>
 
 namespace thwmakos {
@@ -94,12 +96,45 @@ matrix network::evaluate(const matrix& input) const
 	return result;
 }
 
-void network::train()
+void network::train(int epochs, int batch_size, FloatType learning_rate)
 {
 	constexpr auto images = "../data/train-images-idx3-ubyte";
 	constexpr auto labels = "../data/train-labels-idx1-ubyte";
 
 	data_loader dl(images, labels);
+
+	// prepare a vector indices for the samples
+	//std::vector<int> indices(dl.num_samples());
+	// for tests reduce number of samples
+	std::vector<int> indices(100);
+	std::generate(indices.begin(), indices.end(), [n = 0] mutable { return n++; });
+	
+	// need a random engine to shuffle indices
+	std::random_device rd {};
+	std::default_random_engine eng { rd() };
+		
+	for(auto epoch = 0; epoch < epochs; ++epoch)
+	{
+		std::shuffle(indices.begin(), indices.end(), eng);
+		
+		// FIXME: do I need to check if batch_size does not divide num_samples (I think NO)
+		for(auto indices_it = indices.cbegin(); indices.cend() - indices_it >= batch_size; indices_it += batch_size)
+		{
+			// TODO: parallelise this
+			stochastic_gradient_descent(dl, std::span<const int> {indices_it, indices_it + batch_size}, learning_rate);
+		}
+	}
+}
+
+void network::stochastic_gradient_descent(const data_loader& dl, std::span<const int> sample_indices, FloatType learning_rate)
+{
+	for(const int index : sample_indices)
+	{
+		auto sample = dl.get_sample(index);
+		auto grad = backpropagation(sample);
+
+		// TODO: update m_weights and m_biases
+	}
 }
 
 network::gradient network::backpropagation(const training_sample& sample) const
