@@ -76,6 +76,11 @@ TEST_CASE("testing matrix class")
 
 	CHECK(mat5 + mat5 == 2.0f * mat5);
 	CHECK(((2.0f * mat5) - mat5) == mat5);
+
+	matrix mat6 = mat5;
+	mat5 += 2.0f * mat5;
+	mat5 -= mat6;
+	CHECK(mat6 == mat5);
 }
 
 TEST_CASE("testing network class")

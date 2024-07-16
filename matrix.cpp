@@ -149,6 +149,27 @@ bool operator==(const matrix& left, const matrix& right)
 	return true;
 }
 
+matrix operator+(const matrix& mat)
+{
+	return mat;
+}
+
+matrix operator-(const matrix& mat)
+{
+	const auto [num_rows, num_cols] = mat.size();
+	matrix res(num_rows, num_cols);
+	
+	for(auto i = 0; i < num_rows; ++i)
+	{
+		for(auto j = 0; j < num_cols; ++j)
+		{
+			res[i, j] = -mat[i, j];
+		}
+	}
+
+	return res;
+}
+
 matrix operator+(const matrix& left, const matrix& right)
 {
 	if(left.size() != right.size())
@@ -175,20 +196,40 @@ matrix operator-(const matrix& left, const matrix& right)
 	return left + (-right);
 }
 
-matrix operator-(const matrix& mat)
+matrix& operator+=(matrix& left, const matrix& right)
 {
-	const auto [num_rows, num_cols] = mat.size();
-	matrix res(num_rows, num_cols);
-	
-	for(auto i = 0; i < num_rows; ++i)
+	if(left.size() != right.size())
 	{
-		for(auto j = 0; j < num_cols; ++j)
+		throw std::invalid_argument("matrix compound addition: non-matching sizes");
+	}
+
+	for(auto i = 0; i < left.num_rows(); ++i)
+	{
+		for(auto j = 0; j < left.num_cols(); ++j)
 		{
-			res[i, j] = -mat[i, j];
+			left[i, j] += right[i, j];
 		}
 	}
 
-	return res;
+	return left;
+}
+
+matrix& operator-=(matrix& left, const matrix& right)
+{
+	if(left.size() != right.size())
+	{
+		throw std::invalid_argument("matrix compound subtraction: non-matching sizes");
+	}
+
+	for(auto i = 0; i < left.num_rows(); ++i)
+	{
+		for(auto j = 0; j < left.num_cols(); ++j)
+		{
+			left[i, j] -= right[i, j];
+		}
+	}
+
+	return left;
 }
 
 matrix operator*(const matrix& left, const matrix& right)

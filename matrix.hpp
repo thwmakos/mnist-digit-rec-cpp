@@ -261,12 +261,20 @@ matrix elementwise_apply(const matrix& mat, std::regular_invocable<FloatType> au
 
 // operator overloads
 
+// unary plus, returns its argument
+matrix operator+(const matrix&);
+// unary minus, negates every element
+matrix operator-(const matrix& mat);
+
 // add/subtract two matrices together (element-wise)
 matrix operator+(const matrix& left, const matrix& right);
 matrix operator-(const matrix& left, const matrix& right);
 
-// unary minus, negates every element
-matrix operator-(const matrix& mat);
+// compound add/subtract
+// they modify their argument instead of creating new matrix
+matrix& operator+=(matrix& left, const matrix& right);
+matrix& operator-=(matrix& left, const matrix& right);
+
 
 // matrix multiplication
 matrix operator*(const matrix& left, const matrix& right);
