@@ -117,23 +117,34 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 	{
 		std::shuffle(indices.begin(), indices.end(), eng);
 		
-		// FIXME: do I need to check if batch_size does not divide num_samples (I think NO)
+		// FIXME: do I need to check if batch_size does not divide num_samples -- NO
 		for(auto indices_it = indices.cbegin(); indices.cend() - indices_it >= batch_size; indices_it += batch_size)
 		{
 			// TODO: parallelise this
 			stochastic_gradient_descent(dl, std::span<const int> {indices_it, indices_it + batch_size}, learning_rate);
 		}
+
+		std::cout << "Epoch " << epoch << ", m_weights[1] = " << '\n';
+		std::cout << m_weights[1] << '\n';
 	}
 }
 
 void network::stochastic_gradient_descent(const data_loader& dl, std::span<const int> sample_indices, FloatType learning_rate)
 {
+	// in notation: η / <no. of samples per SGD step>
+	const auto coeff = learning_rate / static_cast<FloatType>(sample_indices.size());
+
 	for(const int index : sample_indices)
 	{
 		auto sample = dl.get_sample(index);
 		auto grad = backpropagation(sample);
 
 		// TODO: update m_weights and m_biases
+		for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
+		{
+			m_weights[i] -= coeff * grad.weights[i];
+			m_biases[i] -= coeff * grad.biases[i];
+		}
 	}
 }
 

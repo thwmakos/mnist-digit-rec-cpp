@@ -162,5 +162,5 @@ TEST_CASE("testing network training")
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 
-	nwk.train(2, 10, 0.1f);
+	nwk.train(2, 10, 3.0f);
 }
