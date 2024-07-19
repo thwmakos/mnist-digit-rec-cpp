@@ -9,6 +9,7 @@
 #include "matrix.hpp"
 
 //#include <limits>
+#include <format>
 
 namespace thwmakos {
 
@@ -170,37 +171,26 @@ matrix operator-(const matrix& mat)
 	return res;
 }
 
-matrix operator+(const matrix& left, const matrix& right)
+matrix operator+(matrix left, const matrix& right)
 {
-	if(left.size() != right.size())
-	{
-		throw std::invalid_argument("matrix addition: non-matching sizes");
-	}
-
-	const auto [num_rows, num_cols] = left.size();
-	matrix res(num_rows, num_cols);
-	
-	for(auto i = 0; i < num_rows; ++i)
-	{
-		for(auto j = 0; j < num_cols; ++j)
-		{
-			res[i, j] = left[i, j] + right[i, j];
-		}
-	}
-
-	return res;
+	left += right;
+	return left;
 }
 
-matrix operator-(const matrix& left, const matrix& right)
+matrix operator-(matrix left, const matrix& right)
 {
-	return left + (-right);
+	left -= right;
+	return left;
 }
 
 matrix& operator+=(matrix& left, const matrix& right)
 {
 	if(left.size() != right.size())
 	{
-		throw std::invalid_argument("matrix compound addition: non-matching sizes");
+		throw std::invalid_argument(
+				std::format("matrix addition: mismatched matrix dimensions:"
+				"({}, {}) and ({}, {})", 
+				left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
 	}
 
 	for(auto i = 0; i < left.num_rows(); ++i)
@@ -218,7 +208,10 @@ matrix& operator-=(matrix& left, const matrix& right)
 {
 	if(left.size() != right.size())
 	{
-		throw std::invalid_argument("matrix compound subtraction: non-matching sizes");
+		throw std::invalid_argument(
+				std::format("matrix subtraction: mismatched matrix dimensions:"
+				"({}, {}) and ({}, {})", 
+				left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
 	}
 
 	for(auto i = 0; i < left.num_rows(); ++i)

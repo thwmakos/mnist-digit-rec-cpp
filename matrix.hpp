@@ -267,8 +267,11 @@ matrix operator+(const matrix&);
 matrix operator-(const matrix& mat);
 
 // add/subtract two matrices together (element-wise)
-matrix operator+(const matrix& left, const matrix& right);
-matrix operator-(const matrix& left, const matrix& right);
+// implemented in terms of += and -= respectively
+// take first argument by value to allow moving
+// of temporaries when writing things like a+b+c+d
+matrix operator+(matrix left, const matrix& right);
+matrix operator-(matrix left, const matrix& right);
 
 // compound add/subtract
 // they modify their argument instead of creating new matrix
