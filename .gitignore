@@ -2,3 +2,6 @@ build/
 build/*
 build-rel
 build-rel/*
+.vscode/*
+.kdev4/*
+*.kdev4
