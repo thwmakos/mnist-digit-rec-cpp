@@ -8,14 +8,35 @@
 
 #include "network.hpp"
 #include "data_loader.hpp"
+#include "matrix.hpp"
 
 #include <cmath>
 #include <random>
 #include <algorithm>
 #include <span>
 #include <iostream>
+#include <format>
 
 namespace thwmakos {
+
+// debug helper
+auto weight_max(const network::gradient& grad)
+{
+	auto wmax = *std::max_element(grad.weights[0].cbegin(), grad.weights[0].cend());
+
+	for(auto i = 1; i < grad.weights.size(); ++i)
+	{
+		auto temp = std::max_element(grad.weights[i].cbegin(), grad.weights[i].cend());
+
+		if(wmax < *temp)
+		{
+			wmax = *temp;
+		}
+	}
+
+	return wmax;
+}
+
 
 // calculates the function 1 / (1 + e^{-x})
 // TODO: add test for this function 
@@ -124,8 +145,7 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 			stochastic_gradient_descent(dl, std::span<const int> {indices_it, indices_it + batch_size}, learning_rate);
 		}
 
-		std::cout << "Epoch " << epoch << ", m_weights[1] = " << '\n';
-		std::cout << m_weights[1] << '\n';
+		std::cout << std::format("Epoch {}, m_weights[1] = {}\n", epoch, m_weights[1]);
 	}
 }
 
