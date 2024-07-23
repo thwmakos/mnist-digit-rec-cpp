@@ -10,6 +10,11 @@ src = ['matrix.cpp', 'network.cpp', 'data_loader.cpp']
 # flags for both targets
 cpp_compile_args = ['-std=c++23', '-fno-math-errno', '-fno-trapping-math']
 
+# extra optimisation options
+if get_option('buildtype').startswith('release')
+    add_project_arguments('-march=native', language : 'cpp')
+endif
+
 # Qt6 stuff for building the Guide
 qt6 = import('qt6')
 qt6_dep = dependency('qt6', modules : ['Core', 'Gui', 'Quick', 'Qml'])
