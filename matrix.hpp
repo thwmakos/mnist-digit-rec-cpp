@@ -223,6 +223,17 @@ class matrix
 			return operator()(row, col);
 		}
 
+		// iterators to matrix data
+		// access matrix entries sequencially, in row major order
+		auto begin() { return m_data.begin(); }
+		auto end() { return m_data.end(); }
+		auto cbegin() const { return m_data.cbegin(); }
+		auto cend() const { return m_data.cend(); }
+		auto rbegin() { return m_data.rbegin(); }
+		auto rend() { return m_data.rend(); }
+		auto crbegin() const { return m_data.crbegin(); }
+		auto crend() const { return m_data.crend(); }
+
 	private:
 		int m_num_rows, m_num_columns; // number of rows and columns in the matrix
 
