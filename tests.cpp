@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <format>
+#include <cfenv> // to enable SIGFPE
 
 #include "matrix.hpp"
 #include "network.hpp"
@@ -22,6 +23,12 @@ using thwmakos::FloatType;
 using thwmakos::matrix;
 using thwmakos::network;
 using thwmakos::data_loader;
+
+#ifdef THWMAKOS_NDEBUG
+	constexpr bool debug = false;
+#else
+	constexpr bool debug = true;
+#endif
 
 // try various tests on the Matrix class
 TEST_CASE("testing matrix class")
@@ -162,5 +169,11 @@ TEST_CASE("testing network training")
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 
-	//nwk.train(2, 10, 3.0f);
+	if constexpr (debug)
+	{
+		std::cout << std::format("Debugging: {}\n", debug);
+		feenableexcept(FE_INVALID | FE_OVERFLOW);
+	}
+
+	nwk.train(20, 10, 3.0f);
 }

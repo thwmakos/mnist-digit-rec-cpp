@@ -17,6 +17,13 @@
 #include <iostream>
 #include <format>
 
+// used to enable/disable code for debugging
+#ifdef THWMAKOS_NDEBUG
+	constexpr bool thwmakos_debug = false;
+#else
+	constexpr bool thwmakos_debug = true;
+#endif
+
 namespace thwmakos {
 
 // debug helper
@@ -24,7 +31,7 @@ auto weight_max(const network::gradient& grad)
 {
 	auto wmax = *std::max_element(grad.weights[0].cbegin(), grad.weights[0].cend());
 
-	for(auto i = 1; i < grad.weights.size(); ++i)
+	for(auto i = 1; i < static_cast<int>(grad.weights.size()); ++i)
 	{
 		auto temp = std::max_element(grad.weights[i].cbegin(), grad.weights[i].cend());
 
@@ -42,7 +49,16 @@ auto weight_max(const network::gradient& grad)
 // TODO: add test for this function 
 FloatType sigmoid(FloatType x)
 {
-	const auto one = static_cast<FloatType>(1.0);
+	// return 0 if x is smaller than this value to
+	// avoid NaN's when exp(-x) gets too large
+	constexpr FloatType cutoff = -30.0;
+
+	if(x <= cutoff)
+	{
+		return static_cast<FloatType>(0.0);
+	}
+
+	constexpr FloatType one = 1.0;
 	return one / (one + std::exp(-x));
 }
 
@@ -50,7 +66,15 @@ FloatType sigmoid(FloatType x)
 // TODO: add test for this function too
 FloatType sigmoid_derivative(FloatType x)
 {
-	const auto one = static_cast<FloatType>(1.0);	
+	// when to just return 0
+	constexpr FloatType cutoff = -25.0;
+
+	if(x <= cutoff)
+	{
+		return static_cast<FloatType>(0.0);
+	}
+
+	constexpr FloatType one = 1.0;
 	const auto exp_minus_x = std::exp(-x);
 
 	return exp_minus_x / ((one + exp_minus_x) * (one + exp_minus_x));
@@ -124,10 +148,22 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 
 	data_loader dl(images, labels);
 
+	int num_samples = 0;
+
+	if constexpr (thwmakos_debug)
+	{
+				// for debug reduce number of samples
+		// for faster execution
+		num_samples = 1000;
+	}
+	else
+	{
+		// for release builds use all samples
+		num_samples = dl.num_samples();
+	}
+
 	// prepare a vector indices for the samples
-	//std::vector<int> indices(dl.num_samples());
-	// for tests reduce number of samples
-	std::vector<int> indices(100);
+	std::vector<int> indices(num_samples);
 	std::generate(indices.begin(), indices.end(), [n = 0] mutable { return n++; });
 	
 	// need a random engine to shuffle indices
@@ -145,7 +181,10 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 			stochastic_gradient_descent(dl, std::span<const int> {indices_it, indices_it + batch_size}, learning_rate);
 		}
 
-		std::cout << std::format("Epoch {}, m_weights[1] = {}\n", epoch, m_weights[1]);
+		if constexpr (thwmakos_debug)
+		{
+			std::cout << std::format("Epoch {}, m_weights[1] = {}\n", epoch, m_weights[1]);
+		}
 	}
 }
 
