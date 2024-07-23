@@ -13,7 +13,8 @@
 #include <stdexcept>
 #include <concepts>
 #include <ostream>
-#include <cassert>
+#include <format>
+#include <sstream> // for the formatter
 
 namespace thwmakos {
 
@@ -229,6 +230,7 @@ class matrix
 };
 
 std::ostream & operator<<(std::ostream&, const matrix&);
+
 bool operator==(const matrix&, const matrix&);
 
 // multiply two matrices 
@@ -286,5 +288,23 @@ matrix operator*(const matrix& left, const matrix& right);
 matrix operator*(FloatType scalar, const matrix& mat);
 
 } // namespace thwmakos
+
+
+// std::formatter specialisation
+template<> struct std::formatter<thwmakos::matrix>
+{
+	constexpr auto parse(std::format_parse_context& pc)
+	{
+		return pc.begin();
+	}
+
+	auto format(const thwmakos::matrix& mat, std::format_context& fc) const
+	{
+		std::ostringstream stream;
+		stream << mat;
+		return std::format_to(fc.out(), "{}", stream.str());
+	}
+};
+
 
 #endif // MATRIX_HPP_INCLUDED
