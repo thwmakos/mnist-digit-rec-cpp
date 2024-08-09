@@ -29,19 +29,27 @@ namespace thwmakos {
 // debug helper
 auto weight_max(const network::gradient& grad)
 {
-	auto wmax = *std::max_element(grad.weights[0].cbegin(), grad.weights[0].cend());
-
-	for(auto i = 1; i < static_cast<int>(grad.weights.size()); ++i)
+	if constexpr (thwmakos_debug)
 	{
-		auto temp = std::max_element(grad.weights[i].cbegin(), grad.weights[i].cend());
 
-		if(wmax < *temp)
+		auto wmax = *std::max_element(grad.weights[0].cbegin(), grad.weights[0].cend());
+
+		for(auto i = 1; i < static_cast<int>(grad.weights.size()); ++i)
 		{
-			wmax = *temp;
-		}
-	}
+			auto temp = std::max_element(grad.weights[i].cbegin(), grad.weights[i].cend());
 
-	return wmax;
+			if(wmax < *temp)
+			{
+				wmax = *temp;
+			}
+		}
+
+		return wmax;
+	}
+	else
+	{
+		return {};
+	}
 }
 
 
