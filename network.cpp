@@ -46,6 +46,7 @@ auto weight_max(const network::gradient& grad)
 
 		return wmax;
 	}
+	// if not in debug build reduce the function to no op
 	else
 	{
 		return {};
