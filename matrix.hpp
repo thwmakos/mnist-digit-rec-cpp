@@ -12,6 +12,7 @@
 #include <vector>
 #include <stdexcept>
 #include <concepts>
+#include <algorithm>
 #include <ostream>
 #include <format>
 #include <sstream> // for the formatter
@@ -256,18 +257,13 @@ matrix elementwise_multiply(const matrix&, const matrix&);
 // apply func to every element of the matrix and return a new matrix
 // test concepts btw
 // TODO: add tests for this function -- DONE
-matrix elementwise_apply(const matrix& mat, std::regular_invocable<FloatType> auto func)
+// TODO: parallelise this use <execution>
+matrix elementwise_apply(const matrix &mat, std::regular_invocable<FloatType> auto func)
 {
 	const auto [num_rows, num_cols] = mat.size();
 	matrix result(num_rows, num_cols);
-
-	for(auto i = 0; i < num_rows; ++i)
-	{
-		for(auto j = 0; j < num_cols; ++j)
-		{
-			result[i, j] = func(mat[i, j]);
-		}
-	}
+	
+	std::transform(mat.cbegin(), mat.cend(), result.begin(), func);
 
 	return result;
 }
