@@ -13,23 +13,13 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQuickView>
-#include <QQmlContext>
 
 #include <memory>
 
 int main(int argc, char *argv[])
 {
-	// all I need is a simple window to load the qml file,
-	// QQuickView seems ideal for this
     QGuiApplication app(argc, argv);
-    auto view = std::make_unique<QQuickView>();
-
-	// handle closing the window properly	
-	QObject::connect(view->engine(), &QQmlApplicationEngine::quit, &app, &QGuiApplication::quit);
-
-    view->setSource(QUrl("file:../main_window.qml"));
-   	view->show();
+	QQmlApplicationEngine engine("../main_window.qml");
 
     return app.exec();
 }
