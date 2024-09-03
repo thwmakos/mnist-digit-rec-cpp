@@ -1,4 +1,4 @@
-//
+/
 // ~thwmakos~
 //
 // tests.cpp
@@ -172,6 +172,7 @@ TEST_CASE("testing network training")
 	if constexpr (debug)
 	{
 		std::cout << std::format("Debugging: {}\n", debug);
+		// if running in debugger, break on floating point NaN and overflow
 		feenableexcept(FE_INVALID | FE_OVERFLOW);
 	}
 
