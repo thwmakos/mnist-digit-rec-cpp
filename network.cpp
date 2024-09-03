@@ -202,17 +202,34 @@ void network::stochastic_gradient_descent(const data_loader& dl, std::span<const
 	// in notation: η / <no. of samples per SGD step>
 	const auto coeff = learning_rate / static_cast<FloatType>(sample_indices.size());
 
+	// for each sample, we calculate the weight and bias gradients 
+	// and store them in this variable
+	network::gradient total_gradient;
+	// set appropriate dimensions and allocate memory for total_gradient
+	for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
+	{
+		total_gradient.weights[i].set_size(m_weights[i].size());
+		total_gradient.biases[i].set_size(m_biases[i].size());
+	}
+
 	for(const int index : sample_indices)
 	{
 		auto sample = dl.get_sample(index);
 		auto grad = backpropagation(sample);
-
-		// TODO: update m_weights and m_biases
+		
+		// update total_gradient	
 		for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
 		{
-			m_weights[i] -= coeff * grad.weights[i];
-			m_biases[i] -= coeff * grad.biases[i];
+			total_gradient.weights[i] += grad.weights[i];
+			total_gradient.biases[i]  += grad.biases[i];
 		}
+	}
+	
+	// update m_weights and m_biases (stochastic gradient descent step)
+	for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
+	{
+		m_weights[i] -= coeff * total_gradient.weights[i];
+		m_biases[i] -= coeff * total_gradient.biases[i];
 	}
 }
 

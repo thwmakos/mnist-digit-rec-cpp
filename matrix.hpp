@@ -161,6 +161,12 @@ class matrix
 			m_num_columns = new_num_cols;
 			m_data.resize(m_num_rows * m_num_columns, FloatType {});
 		}
+		
+		// overload of set_size for convenience
+		void set_size(std::pair<int, int> new_size)
+		{
+			set_size(new_size.first, new_size.second);
+		}
 
 		// get number of rows of the matrix
 		int num_rows() const { return m_num_rows; }
