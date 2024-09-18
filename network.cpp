@@ -27,7 +27,7 @@
 namespace thwmakos {
 
 // debug helper
-auto weight_max(const network::gradient& grad)
+FloatType weight_max(const network::gradient& grad)
 {
 	if constexpr (thwmakos_debug)
 	{
@@ -49,7 +49,7 @@ auto weight_max(const network::gradient& grad)
 	// if not in debug build reduce the function to no op
 	else
 	{
-		return {};
+		return FloatType {};
 	}
 }
 
