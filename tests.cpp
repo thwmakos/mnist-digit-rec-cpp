@@ -175,6 +175,17 @@ TEST_CASE("testing network training")
 		// if running in debugger, break on floating point NaN and overflow
 		feenableexcept(FE_INVALID | FE_OVERFLOW);
 	}
+	
+	std::cout << std::format("Train model (y / N)? ");
+	
+	char choice {};
+
+	std::cin >> std::noskipws >> choice;
+
+	if(!std::cin || choice != 'y')
+	{
+		return;
+	}
 
 	nwk.train(20, 10, 3.0f);
 }
