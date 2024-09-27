@@ -225,9 +225,16 @@ class matrix
 			return operator()(row, col);
 		}
 
-		FloatType  operator[](int row, int col) const
+		FloatType operator[](int row, int col) const
 		{
 			return operator()(row, col);
+		}
+		
+		// calculate the index in the vector m_data
+		// of the element (row, col) of the matrix
+		int index(int row, int col) const
+		{
+			return row * m_num_columns + col;
 		}
 
 		// iterators to matrix data
