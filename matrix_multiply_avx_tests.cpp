@@ -9,6 +9,7 @@
 
 #include <random>
 #include <print> // we have access to <print> in gcc 14!
+#include <algorithm>
 
 #include "matrix.hpp"
 #include "matrix_multiply_avx.hpp"
@@ -16,14 +17,14 @@
 using thwmakos::matrix;
 using thwmakos::FloatType;
 
-// do not stringify matrix in doctest assertions,
+// do not stringify matrix in d
 // provide dummy toString
-namespace thwmakos {
-	doctest::String toString(const matrix &value)
-	{
-		return "internationally empty";
-	}
-}
+//namespace thwmakos {
+//	doctest::String toString(const matrix &value)
+//	{
+//	return "intentionally empty";
+//	}
+//}
 
 TEST_CASE("test AVX512 matrix multiplication")
 {
@@ -47,14 +48,14 @@ TEST_CASE("test AVX512 matrix multiplication")
 			}
 		}
 	};
-	
+
 	// controls the size of matrices we multiply
 	constexpr int n = 4;
 	constexpr int m = 32;
 	constexpr int scale = 3;
 
-	matrix A((n * m) * (scale - 2), n * m * scale);
-	matrix B(n * m * scale, (n * m) * (scale - 1));
+	matrix A(n * scale, 100);
+	matrix B(100, m * scale);
 
 	randomise(A);
 	randomise(B);
