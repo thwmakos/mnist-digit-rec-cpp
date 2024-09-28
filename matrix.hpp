@@ -177,6 +177,9 @@ class matrix
 		// get the backing vector of the matrix containing all
 		// the entries
 		const std::vector<FloatType> &data() const { return m_data; }
+		// careful when using this version, do not add or remove elements
+		// from m_data
+		std::vector<FloatType> &data() { return m_data; }
 
 		// member function to access the matrix elements
 		// does bound checking
