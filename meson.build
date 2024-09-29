@@ -13,7 +13,7 @@ cpp_compile_args = ['-std=c++23', '-fno-math-errno']
 
 # extra optimisation options
 if get_option('buildtype').startswith('release')
-    add_project_arguments(['-march=native', '-fno-trapping-math', '-DTHWMAKOS_NDEBUG'], language : 'cpp')
+    add_project_arguments(['-march=native', '-ffast-math', '-DTHWMAKOS_NDEBUG'], language : 'cpp')
 endif
 
 # Qt6 stuff for building the Guide
