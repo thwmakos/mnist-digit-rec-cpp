@@ -9,7 +9,7 @@
 
 #include <random>
 #include <print> // we have access to <print> in gcc 14!
-#include <algorithm>
+#include <chrono>
 
 #include "matrix.hpp"
 #include "matrix_multiply_avx.hpp"
@@ -50,20 +50,35 @@ TEST_CASE("test AVX512 matrix multiplication")
 	};
 
 	// controls the size of matrices we multiply
-	constexpr int n = 4;
-	constexpr int m = 32;
-	constexpr int scale = 3;
+	constexpr int n = 8;
+	constexpr int m = 4 * 16;
+	constexpr int scale = 10;
+	constexpr int middle = 300;
 
-	matrix A(n * scale, 100);
-	matrix B(100, m * scale);
+	matrix A(n * scale, middle);
+	matrix B(middle, m * scale);
 
 	randomise(A);
 	randomise(B);
 	
-	matrix C1 = multiply(A, B);
-	matrix C2 = multiply_avx512(A, B);
+	CHECK(multiply(A, B) == multiply_avx512(A, B));
 
-	std::println("A dimensions: ({}, {}), B dimensions: ({}, {})", A.num_rows(), A.num_cols(), B.num_rows(), B.num_cols());
+// test speedup in optimised build
+#ifdef THWMAKOS_NDEBUG
+	matrix A_large(n * 50 * scale, 2 * middle); 
+	matrix B_large(2 * middle, m * 50 * scale); 
+	auto t1 = std::chrono::high_resolution_clock::now();	
+	matrix C1 = multiply(A_large, B_large);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	matrix C2 = multiply_avx512(A_large, B_large);
+	auto t3 = std::chrono::high_resolution_clock::now();
 
-	CHECK(C1 == C2);
+	std::println("A dimensions: ({}, {}), B dimensions: ({}, {})", A_large.num_rows(), A_large.num_cols(), B_large.num_rows(), B_large.num_cols());
+	std::println("Naive multiply with transpose took {}", std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1));
+	std::println("AVX512 multiply took {}", std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2));
+	std::println("AVX512 was {} times faster", 
+			std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() / 
+			std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count());
+#endif
+
 }
