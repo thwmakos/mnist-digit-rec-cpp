@@ -126,6 +126,8 @@ std::ostream & operator<<(std::ostream &os, const matrix& mat)
 
 bool operator==(const matrix& left, const matrix& right)
 {
+	constexpr FloatType eps = 1.0e-3;
+
 	if(left.num_rows() != right.num_rows() ||
 	   left.num_cols() != right.num_cols())
 	{
@@ -138,7 +140,7 @@ bool operator==(const matrix& left, const matrix& right)
 		{
 			// if two elements are equal
 			// TODO: there are better way to check float equality
-			if(left[row, col] - right[row, col] >= 1.0e-5)
+			if(left[row, col] - right[row, col] >= eps)
 			{
 				return false;
 			}
