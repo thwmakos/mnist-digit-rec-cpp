@@ -19,8 +19,9 @@ namespace thwmakos {
 // we calculate the product C = A * B by computing
 // C in smaller submatrices of dimensions given
 // by the parameters below
-constexpr int num_submatrix_rows = 4;
-constexpr int num_submatrix_cols = 2 * 16;
+constexpr int num_submatrix_rows = 8;      // submatrix size needs to be adjusted to CPU
+constexpr int num_submatrix_cols = 4 * 16; // these parameters provide 20x performance boots to
+										   // naive implementation on intel tgl (i7 11800H CPU)
 // the number of columns is a multiple of 16 which 
 // is how many single precision floats an avx512 
 // register stores
