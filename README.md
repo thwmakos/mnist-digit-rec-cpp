@@ -1,6 +1,6 @@
 # mnist-digit-rec-cpp
 
-**work in progress**
+**Work in progress**
 
 Implementation of the classic neural network that recognises
 handwritten digits, trained on the MNIST dataset in pure C++23
@@ -17,3 +17,7 @@ Training and test data are located in the `/data` directory.
 ## Building
 - For testing use the `cli` target: `meson setup builddir && cd builddir && meson compile` and run `./cli`
 - For the Qt6 interface use the `gui` target and run `./gui`
+- There is an AVX512 accelerated implementation of matrix multiplication implemented in
+  `matrix_multiply_avx.cpp` that is 20-50 times faster than the naive one in `matrix.cpp` on my
+  machine, depending on matrix sizes. Try it with `meson setup builddir-rel --buildtype=release &&
+  meson compile matmul-avx -C builddir-rel && ./build-rel/matmul-avx`. 
