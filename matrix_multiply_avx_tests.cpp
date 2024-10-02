@@ -26,6 +26,12 @@ using thwmakos::FloatType;
 //	}
 //}
 
+#ifdef THWMAKOS_NDEBUG
+constexpr bool release_build = true;
+#else
+constexpr bool release_build = false;
+#endif
+
 TEST_CASE("test AVX512 matrix multiplication")
 {
 	// borrowed code from network.cpp to initialise 
@@ -63,22 +69,22 @@ TEST_CASE("test AVX512 matrix multiplication")
 	
 	CHECK(multiply(A, B) == multiply_avx512(A, B));
 
-// test speedup in optimised build
-#ifdef THWMAKOS_NDEBUG
-	matrix A_large(n * 50 * scale, 2 * middle); 
-	matrix B_large(2 * middle, m * 50 * scale); 
-	auto t1 = std::chrono::high_resolution_clock::now();	
-	matrix C1 = multiply(A_large, B_large);
-	auto t2 = std::chrono::high_resolution_clock::now();
-	matrix C2 = multiply_avx512(A_large, B_large);
-	auto t3 = std::chrono::high_resolution_clock::now();
+	// test speedup in optimised build
+	if constexpr(release_build)
+	{
+		matrix A_large(n * 50 * scale, 2 * middle); 
+		matrix B_large(2 * middle, m * 10 * scale); 
+		auto t1 = std::chrono::high_resolution_clock::now();	
+		matrix C1 = multiply(A_large, B_large);
+		auto t2 = std::chrono::high_resolution_clock::now();
+		matrix C2 = multiply_avx512(A_large, B_large);
+		auto t3 = std::chrono::high_resolution_clock::now();
 
-	std::println("A dimensions: ({}, {}), B dimensions: ({}, {})", A_large.num_rows(), A_large.num_cols(), B_large.num_rows(), B_large.num_cols());
-	std::println("Naive multiply with transpose took {}", std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1));
-	std::println("AVX512 multiply took {}", std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2));
-	std::println("AVX512 was {} times faster", 
-			std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() / 
-			std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count());
-#endif
-
+		std::println("A dimensions: ({}, {}), B dimensions: ({}, {})", A_large.num_rows(), A_large.num_cols(), B_large.num_rows(), B_large.num_cols());
+		std::println("Naive multiply with transpose took {}", std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1));
+		std::println("AVX512 multiply took {}", std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2));
+		std::println("AVX512 was {} times faster", 
+				std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() / 
+				std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count());
+	}
 }
