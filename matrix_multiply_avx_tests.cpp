@@ -59,7 +59,7 @@ TEST_CASE("test AVX512 matrix multiplication")
 	constexpr int n = 8;
 	constexpr int m = 4 * 16;
 	
-	// test various sizes
+	// test various sizes aligned to submatrix size
 	for(int scale : {3, 4, 5, 6, 7, 8, 9, 10})
 	{
 		for(int middle : {31, 42, 53, 57, 64, 65, 69})
@@ -73,13 +73,31 @@ TEST_CASE("test AVX512 matrix multiplication")
 			CHECK(multiply(A, B) == multiply_avx512(A, B));
 		}
 	}
+	
+	// test unaligned sizes that use masked version of submatrix
+	for(int n : {2, 3, 11, 17, 23, 31, 39})
+	{
+		for(int m : {2, 9, 17, 33, 49, 63, 64, 77})
+		{
+			for(int middle : {2, 11, 16, 21})
+			{
+				matrix A(n, middle);
+				matrix B(middle, m);
+
+				randomise(A);
+				randomise(B);
+
+				CHECK_MESSAGE(multiply(A, B) == multiply_avx512(A, B), std::format("dimensions: {}, {}, {}", n, middle, m));
+			}
+		}
+	}
 
 
 	// test speedup in optimised build
 	if constexpr(release_build)
 	{
-		matrix A_large(n * 250, 2000); 
-		matrix B_large(2000, m * 32); 
+		matrix A_large(2011, 1994); 
+		matrix B_large(1994, 777); 
 		randomise(A_large);
 		randomise(B_large);
 		auto t1 = std::chrono::high_resolution_clock::now();	
@@ -93,8 +111,8 @@ TEST_CASE("test AVX512 matrix multiplication")
 
 
 		std::println("A dimensions: ({}, {}), B dimensions: ({}, {})", A_large.num_rows(), A_large.num_cols(), B_large.num_rows(), B_large.num_cols());
-		std::println("Naive multiply with transpose took {}", duration1);
-		std::println("AVX512 multiply took {}", duration2);
+		std::println("Naive multiply with transpose took {}ms", duration1);
+		std::println("AVX512 multiply took {}ms", duration2);
 		std::println("AVX512 was {} times faster", duration1 / (duration2 != 0 ? duration2 : 1)); 
 		// add one above to avoid division by zero
 																							   
