@@ -6,14 +6,14 @@
 project('mnist-digit-rec-cpp', 'cpp', version : '0.1')
 
 # sources for both cli and gui targets
-src = ['matrix.cpp', 'network.cpp', 'data_loader.cpp']
+src = ['matrix.cpp', 'network.cpp', 'data_loader.cpp', 'matrix_multiply_avx.cpp']
 # flags for both targets
 #cpp_compile_args = ['-std=c++23', '-fno-math-errno', '-fno-trapping-math']
-cpp_compile_args = ['-std=c++23', '-fno-math-errno']
+cpp_compile_args = ['-std=c++23', '-fno-math-errno', '-march=native']
 
 # extra optimisation options
 if get_option('buildtype').startswith('release')
-    add_project_arguments(['-march=native', '-ffast-math', '-DTHWMAKOS_NDEBUG'], language : 'cpp')
+    add_project_arguments(['-ffast-math', '-DTHWMAKOS_NDEBUG', '-DNDEBUG'], language : 'cpp')
 endif
 
 # Qt6 stuff for building the Guide

@@ -26,7 +26,7 @@ using thwmakos::FloatType;
 //	}
 //}
 
-#ifdef THWMAKOS_NDEBUG
+#ifdef NDEBUG
 constexpr bool release_build = true;
 #else
 constexpr bool release_build = false;

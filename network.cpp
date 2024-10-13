@@ -14,14 +14,15 @@
 #include <random>
 #include <algorithm>
 #include <span>
-#include <iostream>
 #include <format>
+#include <print>
+#include <chrono>
 
 // used to enable/disable code for debugging
-#ifdef THWMAKOS_NDEBUG
-	constexpr bool thwmakos_debug = false;
+#ifdef NDEBUG 
+	constexpr bool g_debug = false;
 #else
-	constexpr bool thwmakos_debug = true;
+	constexpr bool g_debug = true;
 #endif
 
 namespace thwmakos {
@@ -29,7 +30,7 @@ namespace thwmakos {
 // debug helper
 FloatType weight_max(const network::gradient& grad)
 {
-	if constexpr (thwmakos_debug)
+	if constexpr (g_debug)
 	{
 
 		auto wmax = *std::max_element(grad.weights[0].cbegin(), grad.weights[0].cend());
@@ -159,7 +160,7 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 
 	int num_samples = 0;
 
-	if constexpr (thwmakos_debug)
+	if constexpr (g_debug)
 	{
 				// for debug reduce number of samples
 		// for faster execution
@@ -181,6 +182,7 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 		
 	for(auto epoch = 0; epoch < epochs; ++epoch)
 	{
+		auto t1 = std::chrono::high_resolution_clock::now();
 		std::shuffle(indices.begin(), indices.end(), eng);
 		
 		// FIXME: do I need to check if batch_size does not divide num_samples -- NO
@@ -189,11 +191,9 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 			// TODO: parallelise this
 			stochastic_gradient_descent(dl, std::span<const int> {indices_it, indices_it + batch_size}, learning_rate);
 		}
-
-		if constexpr (thwmakos_debug)
-		{
-			std::cout << std::format("Epoch {}, m_weights[1] = {}\n", epoch, m_weights[1]);
-		}
+		
+		auto t2 = std::chrono::high_resolution_clock::now();
+		std::println("Finished epoch {} in {}", epoch, std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
 	}
 }
 

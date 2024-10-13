@@ -7,11 +7,7 @@
 #include <iostream>
 
 // doctest testing library
-#ifndef NDEBUG
 #define DOCTEST_CONFIG_IMPLEMENT
-#else
-#define DOCTEST_CONFIG_DISABLE
-#endif
 
 // uncomment to disable running of tests
 //#define DOCTEST_CONFIG_DISABLE
