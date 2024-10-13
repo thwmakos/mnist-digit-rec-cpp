@@ -19,6 +19,7 @@ namespace thwmakos {
 // matrices are assumed to have
 // appropriate dimensions, should be from the caller of this function
 matrix multiply_avx512(const matrix &A, const matrix &B);
+matrix multiply_avx2(const matrix &A, const matrix &B);
 
 } // namespace thwmakos
 

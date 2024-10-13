@@ -32,7 +32,7 @@ constexpr bool release_build = true;
 constexpr bool release_build = false;
 #endif
 
-TEST_CASE("test AVX512 matrix multiplication")
+TEST_CASE("test AVX512/AVX2 matrix multiplication")
 {
 	// borrowed code from network.cpp to initialise 
 	// a matrix with random values
@@ -87,7 +87,10 @@ TEST_CASE("test AVX512 matrix multiplication")
 				randomise(A);
 				randomise(B);
 
-				CHECK_MESSAGE(multiply(A, B) == multiply_avx512(A, B), std::format("dimensions: {}, {}, {}", n, middle, m));
+				auto expected = multiply(A, B);
+
+				CHECK_MESSAGE(expected == multiply_avx512(A, B), std::format("avx512: dimensions: {}, {}, {}", n, middle, m));
+				CHECK_MESSAGE(expected == multiply_avx2(A, B), std::format("avx2: dimensions: {}, {}, {}", n, middle, m));
 			}
 		}
 	}
@@ -105,14 +108,18 @@ TEST_CASE("test AVX512 matrix multiplication")
 		auto t2 = std::chrono::high_resolution_clock::now();
 		matrix C2 = multiply_avx512(A_large, B_large);
 		auto t3 = std::chrono::high_resolution_clock::now();
+		matrix C3 = multiply_avx2(A_large, B_large);
+		auto t4 = std::chrono::high_resolution_clock::now();
 		
 		auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 		auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
+		auto duration3 = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
 
 
 		std::println("A dimensions: ({}, {}), B dimensions: ({}, {})", A_large.num_rows(), A_large.num_cols(), B_large.num_rows(), B_large.num_cols());
 		std::println("Naive multiply with transpose took {}ms", duration1);
 		std::println("AVX512 multiply took {}ms", duration2);
+		std::println("AVX2 multiply took {}ms", duration3);
 		std::println("AVX512 was {} times faster", duration1 / (duration2 != 0 ? duration2 : 1)); 
 		// add one above to avoid division by zero
 																							   
