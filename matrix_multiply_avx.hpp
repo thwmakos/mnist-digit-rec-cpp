@@ -21,6 +21,9 @@ namespace thwmakos {
 matrix multiply_avx512(const matrix &A, const matrix &B);
 matrix multiply_avx2(const matrix &A, const matrix &B);
 
+// fallback implementation using only standard C++
+matrix multiply_naive(const matrix &A, const matrix &B);
+
 } // namespace thwmakos
 
 #endif

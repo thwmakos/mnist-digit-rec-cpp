@@ -70,7 +70,10 @@ TEST_CASE("test AVX512/AVX2 matrix multiplication")
 			randomise(A);
 			randomise(B);
 			
-			CHECK(multiply(A, B) == multiply_avx512(A, B));
+			auto expected = multiply_naive(A, B);
+
+			CHECK(expected == multiply_avx512(A, B));
+			CHECK(expected == multiply_avx2(A, B));
 		}
 	}
 	
@@ -87,7 +90,7 @@ TEST_CASE("test AVX512/AVX2 matrix multiplication")
 				randomise(A);
 				randomise(B);
 
-				auto expected = multiply(A, B);
+				auto expected = multiply_naive(A, B);
 
 				CHECK_MESSAGE(expected == multiply_avx512(A, B), std::format("avx512: dimensions: {}, {}, {}", n, middle, m));
 				CHECK_MESSAGE(expected == multiply_avx2(A, B), std::format("avx2: dimensions: {}, {}, {}", n, middle, m));
@@ -104,7 +107,7 @@ TEST_CASE("test AVX512/AVX2 matrix multiplication")
 		randomise(A_large);
 		randomise(B_large);
 		auto t1 = std::chrono::high_resolution_clock::now();	
-		matrix C1 = multiply(A_large, B_large);
+		matrix C1 = multiply_naive(A_large, B_large);
 		auto t2 = std::chrono::high_resolution_clock::now();
 		matrix C2 = multiply_avx512(A_large, B_large);
 		auto t3 = std::chrono::high_resolution_clock::now();
@@ -120,8 +123,7 @@ TEST_CASE("test AVX512/AVX2 matrix multiplication")
 		std::println("Naive multiply with transpose took {}ms", duration1);
 		std::println("AVX512 multiply took {}ms", duration2);
 		std::println("AVX2 multiply took {}ms", duration3);
-		std::println("AVX512 was {} times faster", duration1 / (duration2 != 0 ? duration2 : 1)); 
+		std::println("AVX512 was {} times faster than naive", duration1 / (duration2 != 0 ? duration2 : 1)); 
 		// add one above to avoid division by zero
-																							   
 	}
 }

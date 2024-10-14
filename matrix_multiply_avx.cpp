@@ -181,8 +181,8 @@ matrix multiply_avx512(const matrix &A, const matrix &B)
 	// C in smaller submatrices of dimensions given
 	// by the parameters below
 	constexpr int num_lanes = 16;
-	constexpr int num_submatrix_rows = 6;             // submatrix size needs to be adjusted to CPU
-	constexpr int num_submatrix_cols = 4 * num_lanes; // these parameters provide 20x performance boost to
+	constexpr int num_submatrix_rows = 12;             // submatrix size needs to be adjusted to CPU
+	constexpr int num_submatrix_cols = 8 * num_lanes; // these parameters provide 20x performance boost to
 													  // naive implementation on intel tgl (i7 11800H CPU)
 	// the number of columns is a multiple of 16 which 
 	// is how many single precision floats an avx512 
@@ -233,7 +233,7 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 
 	array2d<__m256, num_submatrix_rows, num_submatrix_cols / num_lanes> C_submatrix {};	
 	__m256 a {};
-	std::array<__m256, num_submatrix_cols / num_lanes>    b_row {};
+	std::array<__m256, num_submatrix_cols / num_lanes>  b_row {};
 	std::array<__m256i, num_submatrix_cols / num_lanes> masks {};
 
 	// get pointers to raw data first 
@@ -405,6 +405,44 @@ matrix multiply_avx2(const matrix &A, const matrix &B)
 }
 
 #endif // __AVX2__
-	 
+	
+// fallback scalar implementation
+matrix multiply_naive(const matrix& left, const matrix& right)
+{
+	// store these so we don't have to call num_rows() and num_cols()
+	// all the time, idk if this speeds up the functions, the above
+	// functions should be inlined anyway 
+	const auto [left_num_rows, left_num_cols]   = left.size();
+	const auto [right_num_rows, right_num_cols] = right.size();
+
+	matrix product(left_num_rows, right_num_cols);
+	
+	// naive implementation of matrix multiplication
+	// TODO: good learning opportunity for intrinsics here
+	
+	// transpose right first to ensure sequential access 
+	// to matrix elements
+	// uses more memory but is ~4 times faster for large matrices
+	auto right_transpose = transpose(right);
+	
+	for(auto i = 0; i < left_num_rows; ++i)
+	{
+		for(auto j = 0; j < right_num_cols; ++j)
+		{
+			// equivalently we could check against right_num_rows
+			FloatType accumulator {}; 
+			
+			for(auto k = 0; k < left_num_cols; ++k)
+			{
+				accumulator += left[i, k] * right_transpose[j, k];
+			}
+
+			product[i, j] = accumulator; 
+		}
+	}
+
+	return product;
+}
+
 } // namespace thwmakos
 
