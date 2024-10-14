@@ -52,9 +52,12 @@ void submatrix_avx512(const matrix &A, const matrix &B, matrix &C, int num_row, 
 	std::array<__mmask16, num_submatrix_cols / num_lanes> masks {};
 
 	// get pointers to raw data first
-	std::span<const float> A_data { A.data().data(), A.data().size() };
-	std::span<const float> B_data { B.data().data(), B.data().size() };
-	std::span<float> C_data { C.data().data(), C.data().size() };
+	//std::span<const float> A_data { A.data().data(), A.data().size() };
+	//std::span<const float> B_data { B.data().data(), B.data().size() };
+	//std::span<float> C_data { C.data().data(), C.data().size() };
+	const float *A_data = A.data().data();
+	const float *B_data = B.data().data();
+	float *C_data = C.data().data();
 	
 	// process an appropriately sized part of C, or less if that is not available 	
 	const auto [actual_rows, actual_cols] = [&] {
