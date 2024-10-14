@@ -234,12 +234,14 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 	array2d<__m256, num_submatrix_rows, num_submatrix_cols / num_lanes> C_submatrix {};	
 	__m256 a {};
 	std::array<__m256, num_submatrix_cols / num_lanes>    b_row {};
-	std::array<__mmask8, num_submatrix_cols / num_lanes> masks {};
+	std::array<__m256i, num_submatrix_cols / num_lanes> masks {};
 
-	// get pointers to raw data first
-	std::span<const float> A_data { A.data().data(), A.data().size() };
-	std::span<const float> B_data { B.data().data(), B.data().size() };
-	std::span<float> C_data { C.data().data(), C.data().size() };
+	// get pointers to raw data first 
+	// can't use spans here because it is not simple to compare a mask to zero and compiler
+	// complains for out of bounds access when all lanes are disabled in the mask
+	const float *A_data = A.data().data();
+	const float *B_data = B.data().data();
+	float  *C_data =C.data().data();
 	
 	// process an appropriately sized part of C, or less if that is not available 	
 	const auto [actual_rows, actual_cols] = [&] {
@@ -263,16 +265,23 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 
 			if(lanes_remaining >= num_lanes)
 			{
-				// TODO: make this constant generic (determine it from num_lanes)
-				masks[j] = (1u << num_lanes) - 1u;
+				// activate all 8 lanes
+				// the most significant bit activates a lane
+				masks[j] = _mm256_set1_epi32(0xFFFFFFFF);
 			}
 			else if(lanes_remaining > 0)
 			{
-				masks[j] = (1u << lanes_remaining) - 1u;
+				// from the bit mask below we need to convert to
+				// AVX2 mask
+				int32_t mask = (1 << lanes_remaining) - 1u;
+				masks[j] = _mm256_set1_epi32(mask);
+				__m256i c = _mm256_setr_epi32(1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7);
+				masks[j] = _mm256_and_si256(masks[j], c);
+				masks[j] = _mm256_cmpeq_epi32(masks[j], c);
 			}
 			else
 			{
-				masks[j] = 0u;
+				masks[j] = _mm256_set1_epi32(0);
 			}
 		}
 	}
@@ -286,10 +295,8 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 		{
 			if constexpr(masked)
 			{
-				if(masks[j] != 0)
-				{
-					C_submatrix[i][j] = _mm256_maskz_loadu_ps(masks[j], &C_data[C_load_index + num_lanes * j]);
-				}
+				// if non-zero mask 
+				C_submatrix[i][j] = _mm256_maskload_ps(&C_data[C_load_index + num_lanes * j], masks[j]);
 			}
 			else
 			{
@@ -308,10 +315,7 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 		{
 			if constexpr(masked)
 			{
-				if(masks[j] != 0)
-				{
-					b_row[j] = _mm256_maskz_loadu_ps(masks[j], &B_data[B_load_index + num_lanes * j]);
-				}
+				b_row[j] = _mm256_maskload_ps(&B_data[B_load_index + num_lanes * j], masks[j]);
 			}
 			else
 			{
@@ -341,10 +345,7 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 		{
 			if constexpr(masked)
 			{
-				if(masks[j] != 0)
-				{
-					_mm256_mask_storeu_ps(&C_data[C_store_index + num_lanes * j], masks[j], C_submatrix[i][j]);
-				}
+				_mm256_maskstore_ps(&C_data[C_store_index + num_lanes * j], masks[j], C_submatrix[i][j]);
 			}
 			else
 			{
