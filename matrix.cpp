@@ -7,7 +7,7 @@
 //
 
 #include "matrix.hpp"
-#include "matrix_multiply_avx.hpp"
+#include "matrix_avx.hpp"
 
 #include <format>
 #include <print>
