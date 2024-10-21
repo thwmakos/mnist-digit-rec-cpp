@@ -11,9 +11,7 @@
 
 #include <doctest/doctest.h>
 
-#include <iostream>
-#include <format>
-#include <cfenv> // to enable SIGFPE
+#include <print>
 
 #include "matrix.hpp"
 #include "network.hpp"
@@ -23,12 +21,6 @@ using thwmakos::FloatType;
 using thwmakos::matrix;
 using thwmakos::network;
 using thwmakos::data_loader;
-
-#ifdef THWMAKOS_NDEBUG
-	constexpr bool debug = false;
-#else
-	constexpr bool debug = true;
-#endif
 
 // try various tests on the Matrix class
 TEST_CASE("testing matrix class")
@@ -132,11 +124,11 @@ TEST_CASE("testing data_loader")
 
 	CHECK(loader.m_num_images == 60000);
 
-	std::cout << std::format("training image data size: {}KiB\n", static_cast<float> (loader.m_image_data.size() / 1024.0f));
-	std::cout << std::format("training label data size: {}KiB\n", static_cast<float> (loader.m_label_data.size() / 1024.0f));
+	std::println("training image data size: {}KiB\n", static_cast<float> (loader.m_image_data.size() / 1024.0f));
+	std::println("training label data size: {}KiB\n", static_cast<float> (loader.m_label_data.size() / 1024.0f));
 
 	int label_index = 456;
-	std::cout << std::format("loader.m_label_data[{}] = {}\n", label_index, loader.m_label_data.at(label_index));
+	std::println("loader.m_label_data[{}] = {}", label_index, loader.m_label_data.at(label_index));
 
 	auto sample = loader.get_sample(label_index);
 	CHECK(sample.label[loader.m_label_data[label_index], 0] == 1.0f);
@@ -169,23 +161,5 @@ TEST_CASE("testing network training")
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 
-	if constexpr (debug)
-	{
-		std::cout << std::format("Debugging: {}\n", debug);
-		// if running in debugger, break on floating point NaN and overflow
-		feenableexcept(FE_INVALID | FE_OVERFLOW);
-	}
-	
-	std::cout << std::format("Train model (y / N)? ");
-	
-	char choice {};
-
-	std::cin >> std::noskipws >> choice;
-
-	if(!std::cin || choice != 'y')
-	{
-		return;
-	}
-
-	nwk.train(20, 10, 3.0f);
+	//nwk.train(20, 10, 3.0f);
 }
