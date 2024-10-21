@@ -15,9 +15,6 @@ Training and test data are located in the `/data` directory.
 - Qt6 with the `Core, Gui, Quick, Qml` modules for the GUI
 
 ## Building
-- For testing use the `cli` target: `meson setup builddir && cd builddir && meson compile` and run `./cli`
+- For testing use the `tests` target: `meson setup builddir && cd builddir && meson compile` and run `./tests`
 - For the Qt6 interface use the `gui` target and run `./gui`
-- There is an AVX512 accelerated implementation of matrix multiplication implemented in
-  `matrix_multiply_avx.cpp` that is 20-50 times faster than the naive one in `matrix.cpp` on my
-  machine, depending on matrix sizes. Try it with `meson setup builddir-rel --buildtype=release &&
-  meson compile matmul-avx -C builddir-rel && ./build-rel/matmul-avx`. 
+- For release build: `meson setup builddir-rel --buildtype=release -Db_ndebug=true`
