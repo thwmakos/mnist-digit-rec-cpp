@@ -162,7 +162,7 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 
 	if constexpr (g_debug)
 	{
-				// for debug reduce number of samples
+		// for debug reduce number of samples
 		// for faster execution
 		num_samples = 1000;
 	}
@@ -193,7 +193,7 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 		}
 		
 		auto t2 = std::chrono::high_resolution_clock::now();
-		std::println("Finished epoch {} in {}", epoch, std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
+		std::println("Finished epoch {} in {}", epoch, std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1));
 	}
 }
 
