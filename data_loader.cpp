@@ -142,18 +142,22 @@ training_sample data_loader::get_sample(int index) const
 	auto data_begin = m_image_data.cbegin() + index * s_image_size;
 	auto data_end   = data_begin + s_image_size;
 	// extract image data
+	// using vector here instead of array because we will move 
+	// the vector into the return value for usage by caller
 	std::vector<FloatType> image_data(data_begin, data_end);
 	// each entry in image_data is between 0.0f and 255.0f, which 0 being black and 255 white
 	// we need to map these [0.0f, 1.0f]
 	std::for_each(image_data.begin(), image_data.end(), [](FloatType &x) { x = x / 255.0f; });
 	
 	// create the to be returned sample
+	// the label and label_val members are set afterwards
 	// FIXME: there should not be any unnecessary copies or movies using the training_sample
 	// struct
 	training_sample sample = { matrix(s_image_size, 1, std::move(image_data)), 
-		matrix(10, 1) };
+		matrix(10, 1), -1 };
 	// set the corresponding entry of label matrix (i.e. column vector) to one
-	sample.label[static_cast<int>(m_label_data.at(index)), 0] = 1.0f;
+	sample.label_val = static_cast<int>(m_label_data.at(index));
+	sample.label[sample.label_val, 0] = 1.0f;
 
 	return sample;
 }

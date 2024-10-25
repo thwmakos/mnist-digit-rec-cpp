@@ -47,12 +47,14 @@ namespace thwmakos {
 // represents a training sample consisting 
 // - of an image (as a column vector of 28 * 28 entries, with one row after another)
 // - the corresponding label (as a column vector of 10 entries)
+// - and int that represents the label as a value instead of a matrix
 //
 // index can be from 0 up to num_samples() 	
 struct training_sample
 {
 	matrix image;
 	matrix label;
+	int    label_val;
 };
 
 class data_loader

@@ -127,11 +127,12 @@ TEST_CASE("testing data_loader")
 	std::println("training image data size: {}KiB\n", static_cast<float> (loader.m_image_data.size() / 1024.0f));
 	std::println("training label data size: {}KiB\n", static_cast<float> (loader.m_label_data.size() / 1024.0f));
 
-	int label_index = 456;
+	int label_index = 2001;
 	std::println("loader.m_label_data[{}] = {}", label_index, loader.m_label_data.at(label_index));
 
 	auto sample = loader.get_sample(label_index);
 	CHECK(sample.label[loader.m_label_data[label_index], 0] == 1.0f);
+	CHECK(sample.label_val == loader.m_label_data[label_index]);
 
 }
 
