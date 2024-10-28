@@ -8,8 +8,9 @@
 
 #include "matrix_avx.hpp"
 
-
+#ifdef __x86_64
 #include <immintrin.h>
+#endif
 
 #include <array>
 #include <span>
