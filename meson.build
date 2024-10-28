@@ -16,8 +16,8 @@ if get_option('buildtype').startswith('release')
 endif
 
 # Qt6 stuff for building the Guide
-qt6 = import('qt6')
-qt6_dep = dependency('qt6', modules : ['Core', 'Gui', 'Quick', 'Qml'])
+#qt6 = import('qt6')
+qt6_dep = dependency('qt6', modules : ['Core', 'Gui', 'Quick', 'Qml'], required : false)
 
 # cli target
 executable('cli', sources : ['cli_main.cpp'] + src, cpp_args : cpp_compile_args)
