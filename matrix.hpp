@@ -122,7 +122,7 @@ class matrix
 			// TODO: can be improved by not defaulting all the elements?
 			m_data.reserve(m_num_rows * m_num_rows);
 
-			for(auto& row : init_data)
+			for(auto &row : init_data)
 			{
 				// ensure all columns have the same length
 				if(static_cast<int>(row.size()) != m_num_columns)
@@ -241,7 +241,7 @@ class matrix
 		}
 
 		// iterators to matrix data
-		// access matrix entries sequencially, in row major order
+		// access matrix entries sequentially, in row major order
 		auto begin() { return m_data.begin(); }
 		auto end() { return m_data.end(); }
 		auto cbegin() const { return m_data.cbegin(); }
