@@ -15,6 +15,10 @@ Training and test data are located in the `/data` directory.
 - Qt6 with the `Core, Gui, Quick, Qml` modules for the GUI
 
 ## Building
+- To train the network and evaluate accuracy on the test set use the `cli` target: 
+  ```
+  meson setup builddir-rel --buildtype=release -Db_ndebug=true && cd builddir-rel && ./cli
+  ```
 - For testing use the `tests` target: `meson setup builddir && cd builddir && meson compile` and run `./tests`
 - For the Qt6 interface use the `gui` target and run `./gui`
 - For release build: `meson setup builddir-rel --buildtype=release -Db_ndebug=true`
