@@ -6,13 +6,13 @@ import numpy as np
 import struct
 from pathlib import Path
 
-file = "./data/train-images-idx3-ubyte"
+file = "./data/t10k-images-idx3-ubyte"
 
 with open(file, 'rb') as f:
     tdata = np.fromfile(f, dtype=np.uint8)
 
 offset = 16 # image data begin at this offset
-image_index = 2001 # change this to display the training image at the given index
+image_index = 333 # change this to display the training image at the given index
 image_size = 28 * 28 # how many bytes for each image
 
 data_begin = offset + image_index * image_size

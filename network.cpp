@@ -28,7 +28,7 @@
 namespace thwmakos {
 
 // debug helper
-FloatType weight_max(const network::gradient& grad)
+FloatType weight_max(const network::gradient &grad)
 {
 	if constexpr (g_debug)
 	{
@@ -90,10 +90,20 @@ FloatType sigmoid_derivative(FloatType x)
 	return exp_minus_x / ((one + exp_minus_x) * (one + exp_minus_x));
 }
 
+int output_to_int(const matrix &output)
+{
+	if(output.num_rows() != 1 && output.num_cols() != 1)
+	{
+		throw std::invalid_argument("not a column or row vector");
+	}
+
+	return std::distance(output.cbegin(), std::max_element(output.cbegin(), output.cend()));
+}
+
 // returns a column vector with the partial derivatives of the cost function
 // in notation this returns \pdv{C_x}{a^L} for the sample (x, y)
 // where a^L is output_activations and y is label 
-matrix cost_derivative(const matrix& output_activations, const matrix& label)
+matrix cost_derivative(const matrix &output_activations, const matrix &label)
 {
 	return output_activations - label;
 }
@@ -133,7 +143,7 @@ network::network()
 	randomise(m_biases);
 }
 
-matrix network::evaluate(const matrix& input) const
+matrix network::evaluate(const matrix &input) const
 {
 	// check if input size is correct
 	// has to be equal to the number of input layers
@@ -193,11 +203,11 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 		}
 		
 		auto t2 = std::chrono::high_resolution_clock::now();
-		std::println("Finished epoch {} in {}", epoch, std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1));
+		std::println("Finished epoch {} in {}", epoch + 1, std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1));
 	}
 }
 
-void network::stochastic_gradient_descent(const data_loader& dl, std::span<const int> sample_indices, FloatType learning_rate)
+void network::stochastic_gradient_descent(const data_loader &dl, std::span<const int> sample_indices, FloatType learning_rate)
 {
 	// in notation: η / <no. of samples per SGD step>
 	const auto coeff = learning_rate / static_cast<FloatType>(sample_indices.size());
@@ -233,7 +243,7 @@ void network::stochastic_gradient_descent(const data_loader& dl, std::span<const
 	}
 }
 
-network::gradient network::backpropagation(const training_sample& sample) const
+network::gradient network::backpropagation(const training_sample &sample) const
 {
 	network::gradient grad;
 	

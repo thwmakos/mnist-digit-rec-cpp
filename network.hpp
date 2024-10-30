@@ -11,6 +11,7 @@
 
 #include "matrix.hpp"
 
+#include <algorithm>
 #include <array>
 #include <span>
 
@@ -21,6 +22,10 @@ FloatType sigmoid(FloatType x);
 
 // calculates derivative of sigmoid which is e^{-x} / (1 + e^{-x})^2
 FloatType sigmoid_derivative(FloatType x);
+
+// helper function to convert the output of the
+// network::evaluate function to an int, representing 
+int output_to_int(const matrix &output);
 
 // forward declaration from data_loader.hpp
 struct training_sample;
