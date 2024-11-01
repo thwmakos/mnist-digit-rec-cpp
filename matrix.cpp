@@ -22,13 +22,13 @@ matrix multiply(const matrix& left, const matrix& right)
 		throw std::invalid_argument("multiply: mismatching matrix dimensions");
 	}
 	
-//#ifdef __AVX512F__
-//	return multiply_avx512(left, right);
-//#elifdef __AVX2__
-	//return multiply_avx2(left, right);
-//#else
+#ifdef __AVX512F__
+	return multiply_avx512(left, right);
+#elifdef __AVX2__
+	return multiply_avx2(left, right);
+#else
 	return multiply_naive(left, right);
-//#endif
+#endif
 }
 
 // TODO: this is very slow, need to make this cache friendly
