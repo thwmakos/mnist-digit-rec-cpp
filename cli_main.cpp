@@ -14,7 +14,7 @@ int main()
 {
     thwmakos::network nwk;
 
-    nwk.train(100, 10, 3.0f);
+    nwk.train(30, 10, 3.0f);
 
 	thwmakos::data_loader loader("../data/t10k-images-idx3-ubyte", "../data/t10k-labels-idx1-ubyte");
 

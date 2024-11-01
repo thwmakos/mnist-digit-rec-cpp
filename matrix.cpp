@@ -25,7 +25,7 @@ matrix multiply(const matrix& left, const matrix& right)
 //#ifdef __AVX512F__
 //	return multiply_avx512(left, right);
 //#elifdef __AVX2__
-//	return multiply_avx2(left, right);
+	//return multiply_avx2(left, right);
 //#else
 	return multiply_naive(left, right);
 //#endif
