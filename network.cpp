@@ -190,7 +190,9 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 	// need a random engine to shuffle indices
 	std::random_device rd {};
 	std::default_random_engine eng { rd() };
-		
+	
+	std::println("Started training for {} epochs, with batch size of {} and learning rate {}", epochs, batch_size, learning_rate);	
+
 	for(auto epoch = 0; epoch < epochs; ++epoch)
 	{
 		auto t1 = std::chrono::high_resolution_clock::now();
@@ -247,8 +249,8 @@ void network::stochastic_gradient_descent(const data_loader &dl, std::span<const
 	std::vector<network::gradient> gradients(sample_indices.size());
 	
 	// load samples
-	std::vector<training_sample> samples;
-	std::transform(sample_indices.begin(), sample_indices.end(), std::back_inserter(samples),
+	std::vector<training_sample> samples(sample_indices.size());
+	std::transform(sample_indices.begin(), sample_indices.end(), samples.begin(),
 			[&dl] (auto sample_index)
 			{
 				return dl.get_sample(sample_index);

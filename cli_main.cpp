@@ -33,7 +33,7 @@ int main()
 	}
 	
 	auto accuracy = static_cast<float>(correct_evals) / static_cast<float>(loader.m_num_images);
-	std::println("Got {} out of {} correctly, accuracy is {} %", correct_evals, loader.m_num_images, accuracy);
+	std::println("Got {} out of {} correctly, accuracy is {} %", correct_evals, loader.m_num_images, 100.0f * accuracy);
 
 	// proceed to interactive mode to investigate raw output of specific samples
 	while(true)
