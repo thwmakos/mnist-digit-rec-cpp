@@ -42,6 +42,10 @@ class network
 		// default constructor, allocates matrices and initialises 
 		// all the weights and biases randomly from a normal distribution
 		explicit network();
+		network(const network &) = delete;
+		network(network &&)      = default;	
+		network &operator=(const network &) = delete;
+		network &operator=(network &&)      = default;
 
 		// evaluate the network
 		// takes a column vector whose length must match the length of the input layer
@@ -75,10 +79,10 @@ class network
 							biases(network_layer_size.size() - 1)
 			{}
 
-			gradient(const gradient&) = default;
+			gradient(const gradient &) = default;
 			gradient(gradient &&) = default;
-			gradient& operator=(const gradient&) = default;
-			gradient& operator=(gradient &&) = default;
+			gradient &operator=(const gradient &) = default;
+			gradient &operator=(gradient &&) = default;
 			~gradient() = default;
 		};
 
