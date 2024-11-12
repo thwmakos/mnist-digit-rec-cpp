@@ -13,6 +13,7 @@
 #include <cmath>
 #include <random>
 #include <algorithm>
+#include <execution>
 #include <span>
 #include <format>
 #include <print>
@@ -212,31 +213,78 @@ void network::stochastic_gradient_descent(const data_loader &dl, std::span<const
 	// in notation: η / <no. of samples per SGD step>
 	const auto coeff = learning_rate / static_cast<FloatType>(sample_indices.size());
 
+	auto allocate_gradient = [this] (network::gradient &grad)
+	{
+		// resize weight matrices in grad
+		std::for_each(grad.weights.begin(), grad.weights.end(), 
+				[m_weights_it = m_weights.cbegin()] (auto &w) mutable
+				{
+					w.set_size((*m_weights_it).size());
+					++m_weights_it;
+				});
+		// resize bias matrices in grad
+		std::for_each(grad.biases.begin(), grad.biases.end(),
+				[m_biases_it = m_biases.cbegin()] (auto &b) mutable
+				{
+					b.set_size((*m_biases_it).size());
+					++m_biases_it;
+				});
+	};
+
 	// for each sample, we calculate the weight and bias gradients 
 	// and store them in this variable
 	network::gradient total_gradient;
+	allocate_gradient(total_gradient);
 	// set appropriate dimensions and allocate memory for total_gradient
+	//for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
+	//{
+	//	total_gradient.weights[i].set_size(m_weights[i].size());
+	//	total_gradient.biases[i].set_size(m_biases[i].size());
+	//}
+
+	// allocate a gradient object for each sample index
+	// the gradients from each sample will be stored here
+	std::vector<network::gradient> gradients(sample_indices.size());
+	
+	// load samples
+	std::vector<training_sample> samples;
+	std::transform(sample_indices.begin(), sample_indices.end(), std::back_inserter(samples),
+			[&dl] (auto sample_index)
+			{
+				return dl.get_sample(sample_index);
+			});
+
+	// get the gradients for each sample in parallel
+	std::transform(std::execution::par, samples.cbegin(), samples.cend(), gradients.begin(),
+			[&] (const auto &sample)
+			{
+				return backpropagation(sample);
+			});
+
+	//for(const int index : sample_indices)
+	//{
+	//	auto sample = dl.get_sample(index);
+	//	auto grad = backpropagation(sample);
+	//	
+	//	// update total_gradient	
+	//	for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
+	//	{
+	//		total_gradient.weights[i] += grad.weights[i];
+	//		total_gradient.biases[i]  += grad.biases[i];
+	//	}
+	//}
+	
 	for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
 	{
-		total_gradient.weights[i].set_size(m_weights[i].size());
-		total_gradient.biases[i].set_size(m_biases[i].size());
-	}
-
-	for(const int index : sample_indices)
-	{
-		auto sample = dl.get_sample(index);
-		auto grad = backpropagation(sample);
-		
-		// update total_gradient	
-		for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
+		for(auto j = 0; j < static_cast<int>(gradients.size()); ++j)
 		{
-			total_gradient.weights[i] += grad.weights[i];
-			total_gradient.biases[i]  += grad.biases[i];
+			total_gradient.weights[i] += gradients[j].weights[i];
+			total_gradient.biases[i]  += gradients[j].biases[i];
 		}
 	}
-	
+
 	// update m_weights and m_biases (stochastic gradient descent step)
-	for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
+	for(int i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
 	{
 		m_weights[i] -= coeff * total_gradient.weights[i];
 		m_biases[i] -= coeff * total_gradient.biases[i];
