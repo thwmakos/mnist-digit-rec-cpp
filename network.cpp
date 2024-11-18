@@ -149,15 +149,21 @@ network::network(std::span<const int> network_layers) :
 	// initialise matrices with random normally distributed entries
 	std::random_device rd {}; 
 	std::default_random_engine eng { rd() };
-	std::normal_distribution<FloatType> normal(0.0f, 1.0f);
 	
 	// lambda to randomise an sequence of matrices using 
 	// the random distribution constructed above
-	auto randomise = [&normal, &eng] (auto& matrices)
+	auto randomise = [&eng] (auto &matrices)
 	{
-		for(auto&& mat : matrices)
+		for(auto &&mat : matrices)
 		{
 			const auto [num_rows, num_cols] = mat.size();
+		
+			// num_cols gives the amount of input neurons in 
+			// this layer, thus initialise the weights from a 
+			// N(0, 1 / sqrt(number of input neurons)) 	
+			const float stddev = 1.0f / std::sqrtf(num_cols);
+				
+			std::normal_distribution<FloatType> normal(0.0f, stddev);
 
 			for(auto i = 0; i < num_rows; ++i)
 			{

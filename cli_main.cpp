@@ -12,11 +12,11 @@
 
 int main()
 {
-	constexpr std::array<int, 4> layers = { 28 * 28, 30, 40, 10 };
+	constexpr std::array<int, 3> layers = { 28 * 28, 30, 10 };
 
     thwmakos::network nwk { layers };
 
-    nwk.train(30, 10, 3.0f);
+    nwk.train(15, 10, 3.0f);
 
 	thwmakos::data_loader loader("../data/t10k-images-idx3-ubyte", "../data/t10k-labels-idx1-ubyte");
 

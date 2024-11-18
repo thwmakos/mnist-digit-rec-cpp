@@ -121,12 +121,10 @@ class network
 		// weight matrices for every layer except first one
 		// the weights of a given neuron in layer are represented by a 
 		// matrix row, with one entry for every neuron in the previous layer 
-		//std::array<matrix, network_layer_size.size() - 1> m_weights;
 		std::vector<matrix> m_weights;
 		
 		// column vectors for biases
 		// first layer neurons do not have biases
-		//std::array<matrix, network_layer_size.size() - 1> m_biases;
 		std::vector<matrix> m_biases;	
 
 };
