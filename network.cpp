@@ -109,13 +109,42 @@ matrix cost_derivative(const matrix &output_activations, const matrix &label)
 	return output_activations - label;
 }
 
-network::network()
+network::network(std::span<const int> network_layers) : 
+	m_layers(network_layers.cbegin(), network_layers.cend()),
+	m_weights(m_layers.size() - 1),
+	m_biases(m_layers.size() - 1)
 {
+	if(*network_layers.cbegin() != 28 * 28 || *(network_layers.cend() - 1) != 10)
+	{
+		throw std::invalid_argument(std::format(
+			"Input layer should have 28 * 28 neurons, output should have 10, found {} and {}",
+			*network_layers.cbegin(), *(network_layers.cend() - 1)));
+	}
+
+
 	// allocate space for the weight and bias matrices
-	m_weights[0].set_size(network_layer_size[1], network_layer_size[0]);
-	m_weights[1].set_size(network_layer_size[2], network_layer_size[1]);
-	m_biases[0].set_size(network_layer_size[1], 1);
-	m_biases[1].set_size(network_layer_size[2], 1);
+	//m_weights[0].set_size(network_layer_size[1], network_layer_size[0]);
+	//m_weights[1].set_size(network_layer_size[2], network_layer_size[1]);
+	//m_biases[0].set_size(network_layer_size[1], 1);
+	//m_biases[1].set_size(network_layer_size[2], 1);
+	// resize weight matrices in grad
+	
+	std::for_each(m_weights.begin(), m_weights.end(), 
+			[layers_it = m_layers.cbegin()] (auto &w) mutable
+			{
+				const int num_rows = *(layers_it + 1);
+				const int num_cols = *layers_it;
+				w.set_size(num_rows, num_cols);
+				++layers_it;
+			});
+	// resize bias matrices in grad
+	std::for_each(m_biases.begin(), m_biases.end(),
+			[layers_it = m_layers.cbegin()] (auto &b) mutable
+			{
+				const int num_rows = *(layers_it + 1);
+				b.set_size(num_rows, 1);
+				++layers_it;
+			});
 	
 	// initialise matrices with random normally distributed entries
 	std::random_device rd {}; 
@@ -154,10 +183,16 @@ matrix network::evaluate(const matrix &input) const
 		throw std::invalid_argument("expected column vector with length of input layer"); 
 	}
 
-	matrix result {};	
-		
-	result = elementwise_apply(m_weights[0] * input  - m_biases[0], sigmoid);
-	result = elementwise_apply(m_weights[1] * result - m_biases[1], sigmoid);
+	//matrix result {};	
+	//result = elementwise_apply(m_weights[0] * input  - m_biases[0], sigmoid);
+	//result = elementwise_apply(m_weights[1] * result - m_biases[1], sigmoid);
+
+	matrix result = input;	
+
+	for(int i = 0; i < static_cast<int>(m_weights.size()); ++i)
+	{
+		result = elementwise_apply(m_weights[i] * result - m_biases[i], sigmoid);
+	}
 
 	return result;
 }
@@ -215,28 +250,9 @@ void network::stochastic_gradient_descent(const data_loader &dl, std::span<const
 	// in notation: η / <no. of samples per SGD step>
 	const auto coeff = learning_rate / static_cast<FloatType>(sample_indices.size());
 
-	auto allocate_gradient = [this] (network::gradient &grad)
-	{
-		// resize weight matrices in grad
-		std::for_each(grad.weights.begin(), grad.weights.end(), 
-				[m_weights_it = m_weights.cbegin()] (auto &w) mutable
-				{
-					w.set_size((*m_weights_it).size());
-					++m_weights_it;
-				});
-		// resize bias matrices in grad
-		std::for_each(grad.biases.begin(), grad.biases.end(),
-				[m_biases_it = m_biases.cbegin()] (auto &b) mutable
-				{
-					b.set_size((*m_biases_it).size());
-					++m_biases_it;
-				});
-	};
-
 	// for each sample, we calculate the weight and bias gradients 
 	// and store them in this variable
-	network::gradient total_gradient;
-	allocate_gradient(total_gradient);
+	network::gradient total_gradient(std::span(m_layers.cbegin(), m_layers.cend()));
 	// set appropriate dimensions and allocate memory for total_gradient
 	//for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
 	//{
@@ -246,7 +262,9 @@ void network::stochastic_gradient_descent(const data_loader &dl, std::span<const
 
 	// allocate a gradient object for each sample index
 	// the gradients from each sample will be stored here
-	std::vector<network::gradient> gradients(sample_indices.size());
+	// make sample_indices.size() copies of total_gradient
+	// (since total_gradient is initialised with zeros, so are the elements)
+	std::vector<network::gradient> gradients(sample_indices.size(), total_gradient);
 	
 	// load samples
 	std::vector<training_sample> samples(sample_indices.size());
@@ -295,7 +313,7 @@ void network::stochastic_gradient_descent(const data_loader &dl, std::span<const
 
 network::gradient network::backpropagation(const training_sample &sample) const
 {
-	network::gradient grad;
+	network::gradient grad(std::span(m_layers.cbegin(), m_layers.cend()));
 	
 	// forward pass
 	

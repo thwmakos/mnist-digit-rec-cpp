@@ -12,7 +12,9 @@
 
 int main()
 {
-    thwmakos::network nwk;
+	constexpr std::array<int, 4> layers = { 28 * 28, 30, 40, 10 };
+
+    thwmakos::network nwk { layers };
 
     nwk.train(30, 10, 3.0f);
 

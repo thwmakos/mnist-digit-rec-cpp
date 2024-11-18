@@ -84,7 +84,7 @@ TEST_CASE("testing matrix class")
 
 TEST_CASE("testing network class")
 {
-	network nwk;
+	network nwk(std::span { thwmakos::network_layer_size });
 
 	//std::cout << "biases[1] \n" << nwk.m_biases[1].size().first << ' ' << nwk.m_biases[1].size().second << '\n';
 		
@@ -138,7 +138,7 @@ TEST_CASE("testing data_loader")
 
 TEST_CASE("testing network training")
 {
-	network nwk;
+	network nwk { thwmakos::network_layer_size };
 	
 	//std::cout << "testing backpropagation:\n";
 	//std::cout << "random biases of last layer:\n";
@@ -146,7 +146,7 @@ TEST_CASE("testing network training")
 	
 	// test if dimensions check in backpropagation()
 	// using a dummy sample	
-	network::gradient grad;
+	network::gradient grad { thwmakos::network_layer_size };
 	thwmakos::training_sample sample;
 	sample.image = matrix(28 * 28, 1);
 	sample.label = matrix(10, 1);
