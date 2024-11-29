@@ -47,25 +47,25 @@ class DrawingWidget : public QWidget
 			}
 		}
 
-    void mouseMoveEvent(QMouseEvent *event) override 
-	{
-        if((event->buttons() & Qt::LeftButton) && m_drawing) 
+		void mouseMoveEvent(QMouseEvent *event) override 
 		{
-            QPainter painter(&m_image);
-            painter.setPen(QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
-            painter.drawLine(m_last_point, event->pos());
-            m_last_point = event->pos();
-            update();
-        }
-    }
+			if((event->buttons() & Qt::LeftButton) && m_drawing) 
+			{
+				QPainter painter(&m_image);
+				painter.setPen(QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap));
+				painter.drawLine(m_last_point, event->pos());
+				m_last_point = event->pos();
+				update();
+			}
+		}
 
-    void mouseReleaseEvent(QMouseEvent *event) override 
-	{
-        if (event->button() == Qt::LeftButton) 
+		void mouseReleaseEvent(QMouseEvent *event) override 
 		{
-            m_drawing = false;
-        }
-    }
+			if (event->button() == Qt::LeftButton) 
+			{
+				m_drawing = false;
+			}
+		}
 
 	public:
 		void save_scaled_image() 
