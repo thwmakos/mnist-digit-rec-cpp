@@ -30,6 +30,18 @@ class DrawingWidget : public QWidget
 			m_image = QImage(size(), QImage::Format_RGB32);
 			m_image.fill(Qt::white);
 		}
+		
+		void save_scaled_image() 
+		{
+			QString filename = QFileDialog::getSaveFileName(this, "Save Image", "", "PNG (*.png)");
+			
+			if (!filename.isEmpty()) 
+			{
+				QImage scaledImage = m_image.scaled(28, 28, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+				QImage grayscaleImage = scaledImage.convertToFormat(QImage::Format_Grayscale8);
+				grayscaleImage.save(filename, "png");
+			}
+		}
 
 	protected:
 		void paintEvent(QPaintEvent *) override 
@@ -66,20 +78,7 @@ class DrawingWidget : public QWidget
 				m_drawing = false;
 			}
 		}
-
-	public:
-		void save_scaled_image() 
-		{
-			QString filename = QFileDialog::getSaveFileName(this, "Save Image", "", "PNG (*.png)");
-			
-			if (!filename.isEmpty()) 
-			{
-				QImage scaledImage = m_image.scaled(28, 28, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-				QImage grayscaleImage = scaledImage.convertToFormat(QImage::Format_Grayscale8);
-				grayscaleImage.save(filename, "png");
-			}
-		}
-
+	
 	private:
 		QImage m_image;
 		QPoint m_last_point;
