@@ -20,7 +20,7 @@ tbb = dependency('tbb')
 
 # Qt6 stuff for building the Guide
 #qt6 = import('qt6')
-qt6_dep = dependency('qt6', modules : ['Core', 'Gui', 'Quick', 'Qml'], required : false)
+qt6_dep = dependency('qt6', modules : ['Core', 'Gui', 'Widgets'], required : false)
 
 # cli target
 executable('cli', sources : ['cli_main.cpp'] + src, dependencies : tbb, cpp_args : cpp_compile_args)
