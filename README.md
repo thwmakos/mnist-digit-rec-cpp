@@ -12,7 +12,7 @@ Training and test data are located in the `/data` directory.
 ## Required to build (so far):
 - C++23
 - `doctest` unit testing library
-- Qt6 with the `Core, Gui, Quick, Qml` modules for the GUI
+- Qt6 with the `Core, Widgets` modules for the GUI
 
 ## Building
 - To train the network and evaluate accuracy on the test set use the `cli` target: 
