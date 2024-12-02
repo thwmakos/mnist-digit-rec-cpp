@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 	ctx.setOption("no-break", true);  // don't break if debugging and a test case fails
 	ctx.applyCommandLine(argc, argv);
 
-		if constexpr (debug)
+	if constexpr (debug)
 	{
 		std::println("Debugging: {}", debug);
 		// if running in debugger, break on floating point NaN and overflow
