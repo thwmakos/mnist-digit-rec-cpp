@@ -116,9 +116,13 @@ class main_window : public QMainWindow
 			connect(save_button, &QPushButton::clicked, m_drawing_widget, &drawing_widget::save_scaled_image);
 			layout->addWidget(save_button);
 
+			layout->setSizeConstraint(QLayout::SetFixedSize);
+
 			setCentralWidget(central_widget);
-			setGeometry(0, 0, image_width * 20, image_height * 20);
+			setGeometry(100, 100, image_width * 20, image_height * 20);
 			setWindowTitle("mnist-digit-rec-cpp gui");
+			setFixedSize(sizeHint());
+			
 		}
 
 	private:
