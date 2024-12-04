@@ -11,17 +11,28 @@
 // and then recognising the digit based on the network
 // implemented in the other files
 
-#include "qnamespace.h"
 #include <QApplication>
 #include <QMainWindow>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QLabel>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QFileDialog>
 
+#include <algorithm>
+#include <vector>
+#include <array>
+#include <print>
+
+#include "matrix.hpp"
+#include "network.hpp"
+
+// in pixels
 constexpr auto image_width = 28;
 constexpr auto image_height = 28;
+
+constexpr std::array<int, 3> layers = { 28 * 28, 30, 10 };
 
 class drawing_widget : public QWidget
 {
@@ -31,27 +42,47 @@ class drawing_widget : public QWidget
 			m_drawing(false) 
 		{
 			setFixedSize(image_width * 20, image_height * 20);
-			m_image = QImage(size(), QImage::Format_RGB32);
+			m_image = QImage(size(), QImage::Format_Grayscale8);
 			m_image.fill(Qt::black);
 		}
 		
-		void save_scaled_image() 
-		{
-			QString filename = QFileDialog::getSaveFileName(this, "Save Image", "", "PNG (*.png)");
-			
-			if (!filename.isEmpty()) 
-			{
-				QImage scaled_image = m_image.scaled(image_width, image_height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-				QImage grayscale_image = scaled_image.convertToFormat(QImage::Format_Grayscale8);
-				grayscale_image.save(filename, "png");
-			}
-		}
-
 		void clear()
 		{
 			m_image.fill(Qt::black);
 			repaint();
 		}
+		
+		// return the drawn shape as a 28 * 28 matrix suitable for
+		// evaluation by the network
+		thwmakos::matrix get_drawing()
+		{
+			std::vector<thwmakos::FloatType> pixels(28 * 28);
+			
+			auto scaled_image = m_image.scaled(image_width, image_height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+			auto data = scaled_image.constBits();
+
+			// expect 28 * 28 pixel, 1 byte in size each
+			if(scaled_image.sizeInBytes() != image_width * image_height)
+			{
+				std::println("image size in bytes {}, expected {}", scaled_image.sizeInBytes(), 28 * 28);	
+			}
+
+			std::transform(data, data + 28 * 28, pixels.begin(), [] (uchar pix) { return static_cast<thwmakos::FloatType>(pix) / 255.0f; });
+
+			return thwmakos::matrix(28 * 28, 1, std::move(pixels));
+		}
+
+		void save_scaled_image()
+		{
+			QString filename = QFileDialog::getSaveFileName(this, "Save Image", "", "PNG (*.png)");
+			
+			if(!filename.isEmpty()) 
+			{
+				QImage scaled_image = m_image.scaled(image_width, image_height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+				scaled_image.save(filename, "png");
+			}
+		}
+
 
 	protected:
 		void paintEvent(QPaintEvent *) override 
@@ -100,7 +131,7 @@ class drawing_widget : public QWidget
 class main_window : public QMainWindow
 {
 	public:
-		main_window(QWidget *parent = nullptr) : QMainWindow(parent)
+		main_window(QWidget *parent = nullptr) : QMainWindow(parent), nwk(layers)
 		{
 			auto central_widget = new QWidget(this);
 			auto layout         = new QVBoxLayout(central_widget);
@@ -108,13 +139,30 @@ class main_window : public QMainWindow
 			m_drawing_widget = new drawing_widget(this);
 			layout->addWidget(m_drawing_widget);
 
+			m_eval_label = new QLabel("Draw a number", this);
+			m_eval_label->setAlignment(Qt::AlignCenter);
+			layout->QLayout::addWidget(m_eval_label);
+
+			auto eval_button = new QPushButton("Evaluate drawing", this);
+			connect(eval_button, &QPushButton::clicked, this, &main_window::evaluate_drawing);
+			layout->addWidget(eval_button);
+
 			auto clear_button = new QPushButton("Clear", this);
 			connect(clear_button, &QPushButton::clicked, m_drawing_widget, &drawing_widget::clear);
 			layout->addWidget(clear_button);
 
-			auto save_button = new QPushButton("Save as 28x28 Grayscale", this);
+			auto train_button = new QPushButton("Train network", this);
+			connect(train_button, &QPushButton::clicked, [this] { nwk.train(15, 10, 3.0); });
+			layout->addWidget(train_button);
+
+			auto save_button = new QPushButton("Save as 28x28 grayscale", this);
 			connect(save_button, &QPushButton::clicked, m_drawing_widget, &drawing_widget::save_scaled_image);
 			layout->addWidget(save_button);
+
+			auto quit_button = new QPushButton("Quit", this);
+			connect(quit_button, &QPushButton::clicked, qApp, &QApplication::quit);
+			layout->addWidget(quit_button);
+
 
 			layout->setSizeConstraint(QLayout::SetFixedSize);
 
@@ -122,11 +170,23 @@ class main_window : public QMainWindow
 			setGeometry(100, 100, image_width * 20, image_height * 20);
 			setWindowTitle("mnist-digit-rec-cpp gui");
 			setFixedSize(sizeHint());
+		}
+
+		void evaluate_drawing()
+		{
+			auto drawing = m_drawing_widget->get_drawing();
+			auto eval    = nwk.evaluate(drawing);
 			
+			auto text = std::format("The number you drew is {}", thwmakos::output_to_int(eval));
+
+			m_eval_label->setText(QString(text.c_str()));
 		}
 
 	private:
-		drawing_widget *m_drawing_widget;
+		drawing_widget *m_drawing_widget = nullptr;
+		QLabel         *m_eval_label     = nullptr;
+
+		thwmakos::network nwk;
 };
 
 int main(int argc, char *argv[]) 
