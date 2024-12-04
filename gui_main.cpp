@@ -177,9 +177,9 @@ class main_window : public QMainWindow
 			auto drawing = m_drawing_widget->get_drawing();
 			auto eval    = nwk.evaluate(drawing);
 			
-			auto text = std::format("The number you drew is {}", thwmakos::output_to_int(eval));
+			auto text = std::format("The number you drew is <b>{}</b>", thwmakos::output_to_int(eval));
 
-			m_eval_label->setText(QString(text.c_str()));
+			m_eval_label->setText(QString::fromStdString(text));
 		}
 
 	private:
