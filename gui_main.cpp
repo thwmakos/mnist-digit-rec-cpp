@@ -19,11 +19,13 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QFileDialog>
+#include <QThread>
 
 #include <algorithm>
 #include <vector>
 #include <array>
 #include <print>
+#include <memory>
 
 #include "matrix.hpp"
 #include "network.hpp"
@@ -143,17 +145,17 @@ class main_window : public QMainWindow
 			m_eval_label->setAlignment(Qt::AlignCenter);
 			layout->QLayout::addWidget(m_eval_label);
 
-			auto eval_button = new QPushButton("Evaluate drawing", this);
-			connect(eval_button, &QPushButton::clicked, this, &main_window::evaluate_drawing);
-			layout->addWidget(eval_button);
+			m_eval_button = new QPushButton("Evaluate drawing", this);
+			connect(m_eval_button, &QPushButton::clicked, this, &main_window::evaluate_drawing);
+			layout->addWidget(m_eval_button);
 
 			auto clear_button = new QPushButton("Clear", this);
 			connect(clear_button, &QPushButton::clicked, m_drawing_widget, &drawing_widget::clear);
 			layout->addWidget(clear_button);
 
-			auto train_button = new QPushButton("Train network", this);
-			connect(train_button, &QPushButton::clicked, [this] { nwk.train(15, 10, 3.0); });
-			layout->addWidget(train_button);
+			m_train_button = new QPushButton("Train network", this);
+			connect(m_train_button, &QPushButton::clicked, this, &main_window::dispatch_training); 
+			layout->addWidget(m_train_button);
 
 			auto save_button = new QPushButton("Save as 28x28 grayscale", this);
 			connect(save_button, &QPushButton::clicked, m_drawing_widget, &drawing_widget::save_scaled_image);
@@ -182,10 +184,32 @@ class main_window : public QMainWindow
 			m_eval_label->setText(QString::fromStdString(text));
 		}
 
+		void dispatch_training()
+		{
+			m_eval_label->setText("Network training in progress");
+			m_eval_button->setDisabled(true);
+			m_train_button->setDisabled(true);
+
+			m_training_thread.reset(QThread::create([this] { nwk.train(30, 20, 3.0); }));
+			
+			connect(m_training_thread.get(), &QThread::finished, 
+					[this] 
+					{ 
+						m_eval_label->setText("Network training complete"); 
+						m_eval_button->setEnabled(true);
+						m_train_button->setEnabled(true);
+					});
+
+			m_training_thread->start();
+		}
+
 	private:
 		drawing_widget *m_drawing_widget = nullptr;
 		QLabel         *m_eval_label     = nullptr;
+		QPushButton    *m_eval_button    = nullptr;
+		QPushButton    *m_train_button   = nullptr;
 
+		std::unique_ptr<QThread> m_training_thread = nullptr;
 		thwmakos::network nwk;
 };
 
