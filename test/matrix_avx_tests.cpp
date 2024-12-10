@@ -11,8 +11,8 @@
 #include <print> // we have access to <print> in gcc 14!
 #include <chrono>
 
-#include "matrix.hpp"
-#include "matrix_avx.hpp"
+#include "../source/matrix.hpp"
+#include "../source/matrix_avx.hpp"
 
 using thwmakos::matrix;
 using thwmakos::FloatType;
@@ -35,19 +35,19 @@ constexpr bool release_build = false;
 // fill a matrix with random values
 void randomise(matrix &mat)
 {
-	// borrowed code from network.cpp to initialise 
+	// borrowed code from network.cpp to initialise
 	// a matrix with random values
-	static std::random_device rd {}; 
+	static std::random_device rd {};
 	static std::default_random_engine eng { rd() };
 	static std::uniform_real_distribution<FloatType> uni(-10.0f, 10.0f);
-	
-	// lambda to randomise an sequence of matrices using 
+
+	// lambda to randomise an sequence of matrices using
 	// the random distribution constructed above
 	const auto [num_rows, num_cols] = mat.size();
 
 	for(auto i = 0; i < num_rows; ++i)
 	{
-		for(auto j = 0; j < num_cols; ++j)	
+		for(auto j = 0; j < num_cols; ++j)
 		{
 			mat[i, j] = uni(eng);
 		}
@@ -56,7 +56,7 @@ void randomise(matrix &mat)
 
 TEST_CASE("test AVX512 matrix multiplication")
 {
-	std::println("Release build: {}", release_build); 
+	std::println("Release build: {}", release_build);
 
 	// test unaligned sizes that use masked version of submatrix
 	for(int n : {1, 2, 3, 11, 17, 23, 31, 39})
@@ -85,11 +85,11 @@ TEST_CASE("test AVX512 matrix multiplication")
 	// test speedup in optimised build
 	if constexpr(release_build)
 	{
-		matrix A_large(2011, 1994); 
-		matrix B_large(1994, 777); 
+		matrix A_large(2011, 1994);
+		matrix B_large(1994, 777);
 		randomise(A_large);
 		randomise(B_large);
-		auto t1 = std::chrono::high_resolution_clock::now();	
+		auto t1 = std::chrono::high_resolution_clock::now();
 		matrix C1 = multiply_naive(A_large, B_large);
 		auto t2 = std::chrono::high_resolution_clock::now();
 #ifdef __AVX512F__
@@ -100,7 +100,7 @@ TEST_CASE("test AVX512 matrix multiplication")
 		matrix C3 = multiply_avx2(A_large, B_large);
 #endif
 		auto t4 = std::chrono::high_resolution_clock::now();
-		
+
 		auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 		auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2);
 		auto duration3 = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3);
@@ -115,10 +115,10 @@ TEST_CASE("test AVX512 matrix multiplication")
 		std::println("AVX2 multiply took {}", duration3);
 #endif
 #ifdef __AVX512F__
-		std::println("AVX512 was {} times faster than naive", duration1.count() / (duration2.count() != 0 ? duration2.count() : 1)); 
+		std::println("AVX512 was {} times faster than naive", duration1.count() / (duration2.count() != 0 ? duration2.count() : 1));
 #endif
 #ifdef __AVX2__
-	std::println("AVX2 was {} times faster than naive", duration1.count() / (duration3.count() != 0 ? duration3.count() : 1)); 
+	std::println("AVX2 was {} times faster than naive", duration1.count() / (duration3.count() != 0 ? duration3.count() : 1));
 #endif
 		// add one above to avoid division by zero
 	}

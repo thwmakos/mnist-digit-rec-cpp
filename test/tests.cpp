@@ -13,9 +13,9 @@
 
 #include <print>
 
-#include "matrix.hpp"
-#include "network.hpp"
-#include "data_loader.hpp"
+#include "../source/matrix.hpp"
+#include "../source/network.hpp"
+#include "../source/data_loader.hpp"
 
 using thwmakos::FloatType;
 using thwmakos::matrix;
