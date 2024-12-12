@@ -160,7 +160,7 @@ matrix operator-(matrix left, const matrix& right)
 	return left;
 }
 
-matrix& operator+=(matrix& left, const matrix& right)
+matrix &operator+=(matrix& left, const matrix& right)
 {
 	if(left.size() != right.size())
 	{
@@ -181,7 +181,7 @@ matrix& operator+=(matrix& left, const matrix& right)
 	return left;
 }
 
-matrix& operator-=(matrix& left, const matrix& right)
+matrix &operator-=(matrix& left, const matrix& right)
 {
 	if(left.size() != right.size())
 	{
