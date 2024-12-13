@@ -24,7 +24,7 @@ Matrix multiplication uses AVX512 or AVX2 on CPUs that support it.
   previous line
 - For testing use the `tests` target: `meson setup builddir && cd builddir && meson compile tests`
   and run `./tests`
-- For release build: `meson setup builddir-rel --buildtype=release -Db_ndebug=true`
+- For release build: `meson setup builddir-rel --buildtype=release`
 
 ## Screenshots
 ![screeshot](data/screeshot-1.jpg "Qt GUI")

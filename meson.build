@@ -4,12 +4,12 @@
 # 13/6/2024
 #
 project('mnist-digit-rec-cpp', 'cpp', version : '0.2',
-    default_options : ['warning_level=3'])
+    default_options : ['cpp_std=c++23', 'warning_level=3', 'b_ndebug=if-release'])
 
 # sources for both cli and gui targets
 src = ['source/matrix.cpp', 'source/network.cpp', 'source/data_loader.cpp', 'source/matrix_avx.cpp']
 # flags for both targets
-cpp_compile_args = ['-std=c++23', '-march=native']
+cpp_compile_args = ['-march=native']
 
 # extra optimisation options
 if get_option('buildtype').startswith('release')
