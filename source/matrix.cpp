@@ -14,7 +14,7 @@
 
 namespace thwmakos {
 
-matrix multiply(const matrix& left, const matrix& right)
+matrix multiply(const matrix &left, const matrix &right)
 {
 	// make sure dimensions are matching
 	if(left.num_cols() != right.num_rows())
@@ -52,7 +52,7 @@ matrix transpose(const matrix &mat)
 	return result;
 }
 
-matrix elementwise_multiply(const matrix& left, const matrix& right)
+matrix elementwise_multiply(const matrix &left, const matrix &right)
 {
 	if(left.size() != right.size())
 	{
@@ -73,7 +73,7 @@ matrix elementwise_multiply(const matrix& left, const matrix& right)
 	return result;
 }
 
-std::ostream & operator<<(std::ostream &os, const matrix& mat)
+std::ostream &operator<<(std::ostream &os, const matrix& mat)
 {
 	// begin with [
 	os << "[ ";
@@ -99,7 +99,7 @@ std::ostream & operator<<(std::ostream &os, const matrix& mat)
 	return os;
 }
 
-bool operator==(const matrix& left, const matrix& right)
+bool operator==(const matrix &left, const matrix &right)
 {
 	constexpr FloatType eps = 1.0e-3;
 
@@ -127,12 +127,12 @@ bool operator==(const matrix& left, const matrix& right)
 	return true;
 }
 
-matrix operator+(const matrix& mat)
+matrix operator+(const matrix &mat)
 {
 	return mat;
 }
 
-matrix operator-(const matrix& mat)
+matrix operator-(const matrix &mat)
 {
 	const auto [num_rows, num_cols] = mat.size();
 	matrix res(num_rows, num_cols);
@@ -148,19 +148,19 @@ matrix operator-(const matrix& mat)
 	return res;
 }
 
-matrix operator+(matrix left, const matrix& right)
+matrix operator+(matrix left, const matrix &right)
 {
 	left += right;
 	return left;
 }
 
-matrix operator-(matrix left, const matrix& right)
+matrix operator-(matrix left, const matrix &right)
 {
 	left -= right;
 	return left;
 }
 
-matrix &operator+=(matrix& left, const matrix& right)
+matrix &operator+=(matrix &left, const matrix &right)
 {
 	if(left.size() != right.size())
 	{
@@ -181,7 +181,7 @@ matrix &operator+=(matrix& left, const matrix& right)
 	return left;
 }
 
-matrix &operator-=(matrix& left, const matrix& right)
+matrix &operator-=(matrix &left, const matrix &right)
 {
 	if(left.size() != right.size())
 	{
@@ -202,12 +202,12 @@ matrix &operator-=(matrix& left, const matrix& right)
 	return left;
 }
 
-matrix operator*(const matrix& left, const matrix& right)
+matrix operator*(const matrix &left, const matrix &right)
 {
 	return multiply(left, right);
 }
 
-matrix operator*(FloatType scalar, const matrix& mat)
+matrix operator*(FloatType scalar, const matrix &mat)
 {
 	matrix res(mat.size());
 
