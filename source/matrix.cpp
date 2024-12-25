@@ -14,6 +14,43 @@
 
 namespace thwmakos {
 
+matrix multiply_naive(const matrix &left, const matrix &right)
+{
+	// store these so we don't have to call num_rows() and num_cols()
+	// all the time, idk if this speeds up the functions, the above
+	// functions should be inlined anyway 
+	const auto [left_num_rows, left_num_cols]   = left.size();
+	const auto [right_num_rows, right_num_cols] = right.size();
+
+	matrix product(left_num_rows, right_num_cols);
+	
+	// naive implementation of matrix multiplication
+	// TODO: good learning opportunity for intrinsics here
+	
+	// transpose right first to ensure sequential access 
+	// to matrix elements
+	// uses more memory but is ~4 times faster for large matrices
+	auto right_transpose = transpose(right);
+	
+	for(auto i = 0; i < left_num_rows; ++i)
+	{
+		for(auto j = 0; j < right_num_cols; ++j)
+		{
+			// equivalently we could check against right_num_rows
+			FloatType accumulator {}; 
+			
+			for(auto k = 0; k < left_num_cols; ++k)
+			{
+				accumulator += left[i, k] * right_transpose[j, k];
+			}
+
+			product[i, j] = accumulator; 
+		}
+	}
+
+	return product;
+}
+
 matrix multiply(const matrix &left, const matrix &right)
 {
 	// make sure dimensions are matching
@@ -29,6 +66,27 @@ matrix multiply(const matrix &left, const matrix &right)
 #else
 	return multiply_naive(left, right);
 #endif
+}
+
+matrix &add_to(matrix &left, const matrix &right)
+{
+	if(left.size() != right.size())
+	{
+		throw std::invalid_argument(
+				std::format("matrix addition: mismatched matrix dimensions:"
+				"({}, {}) and ({}, {})", 
+				left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
+	}
+
+	for(auto i = 0; i < left.num_rows(); ++i)
+	{
+		for(auto j = 0; j < left.num_cols(); ++j)
+		{
+			left[i, j] += right[i, j];
+		}
+	}
+
+	return left;
 }
 
 // TODO: this is very slow, need to make this cache friendly
@@ -148,6 +206,11 @@ matrix operator-(const matrix &mat)
 	return res;
 }
 
+// left is passed by value
+// if a temporary is passed left then the move constructor
+// is called, this expressions such as a + b + c are cheap
+// causing only one allocation and multiple moves
+// not ideal but simple to implement 
 matrix operator+(matrix left, const matrix &right)
 {
 	left += right;
@@ -162,23 +225,7 @@ matrix operator-(matrix left, const matrix &right)
 
 matrix &operator+=(matrix &left, const matrix &right)
 {
-	if(left.size() != right.size())
-	{
-		throw std::invalid_argument(
-				std::format("matrix addition: mismatched matrix dimensions:"
-				"({}, {}) and ({}, {})", 
-				left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
-	}
-
-	for(auto i = 0; i < left.num_rows(); ++i)
-	{
-		for(auto j = 0; j < left.num_cols(); ++j)
-		{
-			left[i, j] += right[i, j];
-		}
-	}
-
-	return left;
+	return add_to(left, right);
 }
 
 matrix &operator-=(matrix &left, const matrix &right)

@@ -410,43 +410,5 @@ matrix multiply_avx2(const matrix &A, const matrix &B)
 
 #endif // __AVX2__
 	
-// fallback scalar implementation
-matrix multiply_naive(const matrix& left, const matrix& right)
-{
-	// store these so we don't have to call num_rows() and num_cols()
-	// all the time, idk if this speeds up the functions, the above
-	// functions should be inlined anyway 
-	const auto [left_num_rows, left_num_cols]   = left.size();
-	const auto [right_num_rows, right_num_cols] = right.size();
-
-	matrix product(left_num_rows, right_num_cols);
-	
-	// naive implementation of matrix multiplication
-	// TODO: good learning opportunity for intrinsics here
-	
-	// transpose right first to ensure sequential access 
-	// to matrix elements
-	// uses more memory but is ~4 times faster for large matrices
-	auto right_transpose = transpose(right);
-	
-	for(auto i = 0; i < left_num_rows; ++i)
-	{
-		for(auto j = 0; j < right_num_cols; ++j)
-		{
-			// equivalently we could check against right_num_rows
-			FloatType accumulator {}; 
-			
-			for(auto k = 0; k < left_num_cols; ++k)
-			{
-				accumulator += left[i, k] * right_transpose[j, k];
-			}
-
-			product[i, j] = accumulator; 
-		}
-	}
-
-	return product;
-}
-
 } // namespace thwmakos
 

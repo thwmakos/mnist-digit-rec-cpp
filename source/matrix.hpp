@@ -261,10 +261,13 @@ std::ostream & operator<<(std::ostream&, const matrix&);
 
 bool operator==(const matrix&, const matrix&);
 
-// multiply two matrices 
+// multiply two matrices
 matrix multiply(const matrix&, const matrix&);
 // return transpose of a matrix
 matrix transpose(const matrix &);
+// simple non-SIMD matrix multiplication fallback
+matrix multiply_naive(const matrix &, const matrix &);
+
 
 // multiply two matrices element wise, that is c_{ij} = a_{ij} * b_{ij}
 // matrices must have the same dimensions
