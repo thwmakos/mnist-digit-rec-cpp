@@ -267,7 +267,8 @@ matrix multiply(const matrix&, const matrix&);
 matrix transpose(const matrix &);
 // simple non-SIMD matrix multiplication fallback
 matrix multiply_naive(const matrix &, const matrix &);
-
+// simple non-SIMD function to add the second operand to the first
+matrix &add_to(matrix &, const matrix &);
 
 // multiply two matrices element wise, that is c_{ij} = a_{ij} * b_{ij}
 // matrices must have the same dimensions

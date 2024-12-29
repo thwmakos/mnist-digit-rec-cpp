@@ -68,6 +68,7 @@ matrix multiply(const matrix &left, const matrix &right)
 #endif
 }
 
+// does left += right and then returns left
 matrix &add_to(matrix &left, const matrix &right)
 {
 	if(left.size() != right.size())
@@ -78,6 +79,10 @@ matrix &add_to(matrix &left, const matrix &right)
 				left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
 	}
 
+#ifdef AVX512F
+	return add_to_avx512(left, right);
+#else
+
 	for(auto i = 0; i < left.num_rows(); ++i)
 	{
 		for(auto j = 0; j < left.num_cols(); ++j)
@@ -87,6 +92,7 @@ matrix &add_to(matrix &left, const matrix &right)
 	}
 
 	return left;
+#endif
 }
 
 // TODO: this is very slow, need to make this cache friendly

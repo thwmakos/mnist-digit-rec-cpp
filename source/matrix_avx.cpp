@@ -222,6 +222,42 @@ matrix multiply_avx512(const matrix &A, const matrix &B)
 	return C;
 }
 
+// does left += right and then returns left
+// dimensions of dimensions are checked in caller
+matrix &add_to_avx512(matrix &left, const matrix &right)
+{
+	constexpr int num_lanes = 16;
+	
+	float       *left_data  = left.data().data();
+	const float *right_data = right.data().data();
+	
+	const int num_elements = static_cast<int>(left.data().size()); 
+
+	int i = 0;
+
+	for(; i + num_lanes < num_elements; i += num_lanes)
+	{
+		__m512 left_reg  = _mm512_loadu_ps(left_data + i);
+		__m512 right_reg = _mm512_loadu_ps(right_data + i); 
+
+		left_reg = _mm512_add_ps(left_reg, right_reg);
+
+		_mm512_storeu_ps(left_data + i, left_reg);
+	}
+	
+	// handle the rest of the elements
+	__mmask16 mask = (1u << (num_elements - i)) - 1u;
+
+	__m512 left_reg  = _mm512_maskz_loadu_ps(mask, left_data + i);
+	__m512 right_reg = _mm512_maskz_loadu_ps(mask, right_data + i);
+
+	left_reg = _mm512_add_ps(left_reg, right_reg);
+
+	_mm512_mask_storeu_ps(left_data + i, mask, left_reg);
+
+	return left;
+}
+
 #endif // __AVX512F__
 
 #ifdef __AVX2__ 

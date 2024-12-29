@@ -21,6 +21,8 @@ namespace thwmakos {
 matrix multiply_avx512(const matrix &A, const matrix &B);
 matrix multiply_avx2(const matrix &A, const matrix &B);
 
+matrix &add_to_avx512(matrix &, const matrix &);
+
 } // namespace thwmakos
 
 #endif

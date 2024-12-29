@@ -54,6 +54,28 @@ void randomise(matrix &mat)
 	}
 }
 
+TEST_CASE("test AVX512 add_to")
+{
+	matrix m1(63, 41);
+	matrix m2(63, 41);
+
+	randomise(m1);
+	randomise(m2);
+
+	matrix m1_copy = m1;
+
+	matrix m3 { { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 } };
+	matrix m4 { { 2.0, 2.0, 2.0 }, { 2.0, 2.0, 2.0 } };
+	matrix m5 = m4;
+
+	add_to(m4, m3);
+	add_to_avx512(m5, m3);
+
+	m1 += m2;
+	CHECK(m1 == add_to(m1_copy, m2));
+	CHECK(m4 == m5);
+}
+
 TEST_CASE("test AVX512 matrix multiplication")
 {
 	std::println("Release build: {}", release_build);
