@@ -29,4 +29,3 @@ executable('cli', sources : ['source/cli_main.cpp'] + src, dependencies : tbb, c
 executable('tests', sources : ['test/tests_main.cpp', 'test/tests.cpp', 'test/matrix_avx_tests.cpp'] + src, dependencies : tbb, cpp_args : cpp_compile_args)
 # gui target
 executable('gui', sources : ['source/gui_main.cpp'] + src, dependencies : [qt6_dep, tbb], cpp_args : cpp_compile_args)
-# build and test AVX512 accelerated matrix multiplication

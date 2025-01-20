@@ -67,7 +67,7 @@ class matrix
 		{}
 		
 		// construct a matrix from raw data, copying data argument into m_data
-		matrix(int num_rows, int num_columns, const std::vector<FloatType>& data) :
+		matrix(int num_rows, int num_columns, const std::vector<FloatType> &data) :
 			m_num_rows(num_rows),
 			m_num_columns(num_columns)
 		{
@@ -86,7 +86,7 @@ class matrix
 		}
 
 		// construct a matrix from raw data, moving data argument into m_data
-		matrix(int num_rows, int num_columns, std::vector<FloatType>&& data) :
+		matrix(int num_rows, int num_columns, std::vector<FloatType> &&data) :
 			m_num_rows(num_rows),
 			m_num_columns(num_columns)
 		{
@@ -183,7 +183,7 @@ class matrix
 
 		// member function to access the matrix elements
 		// does bound checking
-		FloatType& at(int row, int col)
+		FloatType &at(int row, int col)
 		{
 			if(row < 0 || row >= m_num_rows || col < 0 || col >= m_num_columns)
 			{
@@ -205,7 +205,7 @@ class matrix
 
 		// member function to access the matrix elements
 		// does not do bound checking on debug builds
-		FloatType& operator()(int row, int col)
+		FloatType & operator()(int row, int col)
 		{
 			if constexpr(debug_build)
 				return at(row, col);
@@ -223,7 +223,7 @@ class matrix
 		
 		// C++23 multiple subscript feature
 		// same as operator() 	
-		FloatType& operator[](int row, int col)
+		FloatType &operator[](int row, int col)
 		{
 			return operator()(row, col);
 		}
@@ -291,28 +291,28 @@ matrix elementwise_apply(const matrix &mat, std::regular_invocable<FloatType> au
 // operator overloads
 
 // unary plus, returns its argument
-matrix operator+(const matrix&);
+matrix operator+(const matrix &);
 // unary minus, negates every element
-matrix operator-(const matrix& mat);
+matrix operator-(const matrix &mat);
 
 // add/subtract two matrices together (element-wise)
 // implemented in terms of += and -= respectively
 // take first argument by value to allow moving
 // of temporaries when writing things like a+b+c+d
-matrix operator+(matrix left, const matrix& right);
-matrix operator-(matrix left, const matrix& right);
+matrix operator+(matrix left, const matrix &right);
+matrix operator-(matrix left, const matrix &right);
 
 // compound add/subtract
 // they modify their argument instead of creating new matrix
-matrix& operator+=(matrix& left, const matrix& right);
-matrix& operator-=(matrix& left, const matrix& right);
+matrix& operator+=(matrix& left, const matrix &right);
+matrix& operator-=(matrix& left, const matrix &right);
 
 
 // matrix multiplication
-matrix operator*(const matrix& left, const matrix& right);
+matrix operator*(const matrix& left, const matrix &right);
 
 // multiply a matrix by a scalar (element-wise)
-matrix operator*(FloatType scalar, const matrix& mat);
+matrix operator*(FloatType scalar, const matrix &mat);
 
 } // namespace thwmakos
 
@@ -320,12 +320,12 @@ matrix operator*(FloatType scalar, const matrix& mat);
 // std::formatter specialisation
 template<> struct std::formatter<thwmakos::matrix>
 {
-	constexpr auto parse(std::format_parse_context& pc)
+	constexpr auto parse(std::format_parse_context &pc)
 	{
 		return pc.begin();
 	}
 
-	auto format(const thwmakos::matrix& mat, std::format_context& fc) const
+	auto format(const thwmakos::matrix &mat, std::format_context &fc) const
 	{
 		std::ostringstream stream;
 		stream << mat;
