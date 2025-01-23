@@ -56,7 +56,8 @@ matrix multiply(const matrix &left, const matrix &right)
 	// make sure dimensions are matching
 	if(left.num_cols() != right.num_rows())
 	{
-		throw std::invalid_argument("multiply: mismatching matrix dimensions");
+		throw std::invalid_argument(std::format("multiply: mismatching matrix dimensions ({}, {}) and ({}, {})",
+					left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
 	}
 	
 #ifdef __AVX512F__
@@ -120,7 +121,8 @@ matrix elementwise_multiply(const matrix &left, const matrix &right)
 {
 	if(left.size() != right.size())
 	{
-		throw std::invalid_argument("elementwise_multiply: matrices must have same dimensions");
+		throw std::invalid_argument(std::format("elementwise_multiply: mismatched dimensions ({}, {}) and ({}, {})",
+				left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
 	}	
 
 	const auto [num_rows, num_cols] = left.size();
@@ -135,6 +137,46 @@ matrix elementwise_multiply(const matrix &left, const matrix &right)
 	}
 
 	return result;
+}
+
+matrix add_column(const matrix &mat, const matrix &column)
+{
+	if(column.num_cols() != 1 || mat.num_rows() != column.num_rows())
+	{
+		throw std::invalid_argument(std::format("add_column: mismatched dimensions ({}, {}) and ({}, {})",
+				mat.num_rows(), mat.num_cols(), column.num_rows(), column.num_cols()));	
+	}
+
+	// make a copy
+	matrix ret(mat);
+
+	for(int i = 0; i < mat.num_rows(); ++i)
+	{
+		for(int j = 0; j < mat.num_cols(); ++j)
+		{
+			ret[i, j] += column[i, 0];
+		}
+	}
+
+	return ret;
+}
+
+matrix get_column(const matrix &mat, int index)
+{
+	if(index < 0 || index >= mat.num_cols())
+	{
+		throw std::invalid_argument(std::format("get_column: requested column {} but matrix has {} columns",
+					index, mat.num_cols()));
+	}
+
+	matrix column(mat.num_rows(), 1);
+
+	for(int i = 0; i < mat.num_rows(); ++i)
+	{
+		column[i, 0] = mat[i, index];
+	}
+
+	return column;
 }
 
 std::ostream &operator<<(std::ostream &os, const matrix& mat)

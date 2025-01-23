@@ -288,6 +288,12 @@ matrix elementwise_apply(const matrix &mat, std::regular_invocable<FloatType> au
 	return result;
 }
 
+// add column to each column of mat
+matrix add_column(const matrix &mat, const matrix &column);
+
+// extract the column of mat indicated by index
+matrix get_column(const matrix &mat, int index);
+
 // operator overloads
 
 // unary plus, returns its argument
@@ -304,12 +310,11 @@ matrix operator-(matrix left, const matrix &right);
 
 // compound add/subtract
 // they modify their argument instead of creating new matrix
-matrix& operator+=(matrix& left, const matrix &right);
-matrix& operator-=(matrix& left, const matrix &right);
-
+matrix& operator+=(matrix &left, const matrix &right);
+matrix& operator-=(matrix &left, const matrix &right);
 
 // matrix multiplication
-matrix operator*(const matrix& left, const matrix &right);
+matrix operator*(const matrix &left, const matrix &right);
 
 // multiply a matrix by a scalar (element-wise)
 matrix operator*(FloatType scalar, const matrix &mat);

@@ -216,7 +216,7 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 	{
 		// for debug reduce number of samples
 		// for faster execution
-		num_samples = 1000;
+		num_samples = 100;
 	}
 	else
 	{
@@ -242,8 +242,7 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 		// FIXME: do I need to check if batch_size does not divide num_samples -- NO
 		for(auto indices_it = indices.cbegin(); indices.cend() - indices_it >= batch_size; indices_it += batch_size)
 		{
-			// TODO: parallelise this
-			stochastic_gradient_descent(dl, std::span<const int> {indices_it, indices_it + batch_size}, learning_rate);
+			sgd(dl, std::span<const int> {indices_it, indices_it + batch_size}, learning_rate);
 		}
 		
 		auto t2 = std::chrono::high_resolution_clock::now();
@@ -251,97 +250,32 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 	}
 }
 
-void network::stochastic_gradient_descent(const data_loader &dl, std::span<const int> sample_indices, FloatType learning_rate)
-{
-	// in notation: η / <no. of samples per SGD step>
-	const auto coeff = learning_rate / static_cast<FloatType>(sample_indices.size());
 
-	// for each sample, we calculate the weight and bias gradients 
-	// and store them in this variable
+network::gradient network::backpropagation(const matrix &inputs, const matrix &expected_outputs) const
+{
+	const int num_samples = inputs.num_cols();
+	const int num_layers  = static_cast<int>(m_layers.size());
+
 	network::gradient total_gradient(std::span(m_layers.cbegin(), m_layers.cend()));
-	// set appropriate dimensions and allocate memory for total_gradient
-	//for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
-	//{
-	//	total_gradient.weights[i].set_size(m_weights[i].size());
-	//	total_gradient.biases[i].set_size(m_biases[i].size());
-	//}
+	std::vector<network::gradient> gradients(num_samples, total_gradient); // one gradient for each
+																		   // sample (i.e. each
+																		   // column)
 
-	// allocate a gradient object for each sample index
-	// the gradients from each sample will be stored here
-	// make sample_indices.size() copies of total_gradient
-	// (since total_gradient is initialised with zeros, so are the elements)
-	std::vector<network::gradient> gradients(sample_indices.size(), total_gradient);
-	
-	// load samples
-	std::vector<training_sample> samples(sample_indices.size());
-	std::transform(sample_indices.begin(), sample_indices.end(), samples.begin(),
-			[&dl] (auto sample_index)
-			{
-				return dl.get_sample(sample_index);
-			});
-
-	// get the gradients for each sample in parallel
-	std::transform(std::execution::par, samples.cbegin(), samples.cend(), gradients.begin(),
-			[&] (const auto &sample)
-			{
-				return backpropagation(sample);
-			});
-
-	//for(const int index : sample_indices)
-	//{
-	//	auto sample = dl.get_sample(index);
-	//	auto grad = backpropagation(sample);
-	//	
-	//	// update total_gradient	
-	//	for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
-	//	{
-	//		total_gradient.weights[i] += grad.weights[i];
-	//		total_gradient.biases[i]  += grad.biases[i];
-	//	}
-	//}
-	
-	for(auto i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
-	{
-		for(auto j = 0; j < static_cast<int>(gradients.size()); ++j)
-		{
-			total_gradient.weights[i] += gradients[j].weights[i];
-			total_gradient.biases[i]  += gradients[j].biases[i];
-		}
-	}
-
-	// update m_weights and m_biases (stochastic gradient descent step)
-	for(int i = 0; i < static_cast<int>(network_layer_size.size() - 1); ++i)
-	{
-		m_weights[i] -= coeff * total_gradient.weights[i];
-		m_biases[i] -= coeff * total_gradient.biases[i];
-	}
-}
-
-network::gradient network::backpropagation(const training_sample &sample) const
-{
-	network::gradient grad(std::span(m_layers.cbegin(), m_layers.cend()));
+	std::vector<matrix> activations { inputs }; // first activation is the input (training samples)
+	std::vector<matrix> weighted_inputs {};
 	
 	// forward pass
-	
-	// calculate the activations at each layer
-	std::vector<matrix> activations; // this is a^l from Nielsen
-	std::vector<matrix> weighted_inputs; // this is z^l from Nielsen
 
-	// activation at the first layer is input
-	activations.push_back(sample.image);
-
-	// calculate activations and weighted inputs (a^l and z^l) at each layer
-	// in notation, we do this: z^l = w^l \cdot a^{l-1} + b^l and a^l = \sigma (z^l)
-	for(auto [weight_it, bias_it] = std::tuple { std::cbegin(m_weights), std::cbegin(m_biases) };
-			weight_it != std::cend(m_weights); // m_weights and m_biases have the same size
-			++weight_it, ++bias_it)
+	for(int i = 0; i < num_layers - 1; ++i)
 	{
-		const matrix& last_activation = *std::prev(std::cend(activations));
+		// z^l = w^l * a^{l - 1} + b^l
+		// z^l is a matrix with each column representing the activation of each training sample
+		auto weighted_input = add_column(multiply(m_weights[i], activations.back()), m_biases[i]);
 		
-		weighted_inputs.emplace_back(multiply(*weight_it, last_activation) + *bias_it);	
-		activations.emplace_back(elementwise_apply(*std::prev(std::cend(weighted_inputs)), sigmoid));
+		activations.push_back(elementwise_apply(weighted_input, sigmoid));
+		weighted_inputs.push_back(std::move(weighted_input));
 	}
-	
+
 	// backward pass
 	// we start from the final layer and calculate δ^l_j = \pdv{C_x}{z^l_j}
 	// using the formula δ^l = (w^{l+1})^T δ^{l+1} \odot σ'(z^l),
@@ -349,55 +283,90 @@ network::gradient network::backpropagation(const training_sample &sample) const
 	// then the partial derivatives \pdv{C}{w^l_{kj}} can be found in terms of 
 	// δ^l and the other quantities we have already calculated
 	
-	auto activation_it     = std::crbegin(activations);
-	auto weighted_input_it = std::crbegin(weighted_inputs);
-	auto weight_it         = std::crbegin(m_weights);
-
-	auto grad_weight_it = std::rbegin(grad.weights);
-	auto grad_bias_it   = std::rbegin(grad.biases);
-
+	// process last layer
 	// start by calculating δ^L 	
-	matrix delta = elementwise_multiply(cost_derivative(*activation_it, sample.label),
-			elementwise_apply(*weighted_input_it, sigmoid_derivative));
-
-	// note that δ^l and z^l have the same index in the formula , so first advance the (reverse)
-	// iterator
-	++activation_it;
+	auto delta = elementwise_multiply(cost_derivative(activations[num_layers - 1], expected_outputs),
+			elementwise_apply(weighted_inputs[num_layers - 2], sigmoid_derivative));
 	
 	// \pdv{C}{b^l} = δ^l
-	*grad_bias_it = delta;
 	// \pdv{C}{w^l_{jk} = a^{l-1}_k δ^l_j
-	*grad_weight_it = multiply(
-			delta,
-			transpose(*activation_it));
-	
-	++grad_weight_it;
-	++grad_bias_it;	
-	++activation_it;
-	++weighted_input_it;
-
-	// grad.weights and grad.biases have the same number of elements which is
-	// network_layer_size.size() - 1, the same number as m_weights, m_biases and weighted_inputs
-	//
-	// activations has one extra element at the beginning (the sample.image), so total number of
-	// elements is network_layer_size.size()
-	while(grad_weight_it != std::rend(grad.weights))
+	for(int j = 0; j < num_samples; ++j)
 	{
-		delta = elementwise_multiply(
-				multiply(transpose(*weight_it), delta),
-				elementwise_apply(*weighted_input_it, sigmoid_derivative));
-
-		*grad_bias_it = delta;
-		*grad_weight_it = multiply(delta, transpose(*activation_it));
-		
-		++grad_weight_it;
-		++grad_bias_it;	
-		++activation_it;
-		++weighted_input_it;
-		++weight_it;
+		auto delta_column = get_column(delta, j);
+		total_gradient.weights[num_layers - 2] += (1.0 / num_samples) * multiply(delta_column, transpose(get_column(activations[num_layers - 2], j))); 	
+		total_gradient.biases[num_layers - 2]  += (1.0 / num_samples) * delta_column;
 	}
 	
-	return grad;
+	// rest of the layers
+	for(int i = static_cast<int>(num_layers - 3); i >= 0; --i)
+	{
+		delta = elementwise_multiply(
+				multiply(transpose(m_weights[i + 1]), delta),
+				elementwise_apply(weighted_inputs[i], sigmoid_derivative));
+		
+		for(int j = 0; j < num_samples; ++j)
+		{
+			// \pdv{C}{b^l} = δ^l
+			// \pdv{C}{w^l_{jk} = a^{l-1}_k δ^l_j
+			auto delta_column = get_column(delta, j);
+			total_gradient.weights[i] += (1.0 / num_samples) * multiply(delta_column, transpose(get_column(activations[i], j)));
+			total_gradient.biases[i]  += (1.0 / num_samples) * delta_column;
+		}
+	}
+	
+	// calculate total gradient by summing corresponding quantities	
+//	for(int i = 0; i < num_layers - 1; ++i)
+//	{
+//		for(int j = 0; j < num_samples; ++j)
+//		{
+//			total_gradient.weights[i] += (1.0 / num_samples) * gradients[j].weights[i];
+//			total_gradient.biases[i]  += (1.0 / num_samples) * gradients[j].biases[i];
+//		}
+//	}
+
+	return total_gradient;
+}
+
+void network::sgd(const data_loader &dl, std::span<const int> sample_indices, FloatType learning_rate)
+{
+	const int num_samples = static_cast<int>(sample_indices.size());
+
+	// load samples into a matrix, one column per sample
+	matrix inputs(m_layers[0], num_samples);
+	// expected output for each input
+	matrix expected_outputs(m_layers.back(), num_samples);
+
+	std::vector<training_sample> samples(num_samples);
+	std::transform(sample_indices.begin(), sample_indices.end(), samples.begin(),
+			[&dl] (auto sample_index)
+			{
+				return dl.get_sample(sample_index);
+			});
+
+	for(int j = 0; j < inputs.num_cols(); ++j)
+	{
+		for(int i = 0; i < inputs.num_rows(); ++i)
+		{
+			inputs[i, j] = samples[j].image[i, 0];
+		}
+	}
+	
+	for(int j = 0; j < expected_outputs.num_cols(); ++j)
+	{
+		for(int i = 0; i < expected_outputs.num_rows(); ++i)
+		{
+			expected_outputs[i, j] = samples[j].label[i, 0];
+		}
+	}
+
+	auto total_gradient = backpropagation(inputs, expected_outputs);
+
+	// update m_weights and m_biases (stochastic gradient descent step)
+	for(int i = 0; i < static_cast<int>(m_layers.size() - 1); ++i)
+	{
+		m_weights[i] -= learning_rate * total_gradient.weights[i];
+		m_biases[i]  -= learning_rate * total_gradient.biases[i];
+	}
 }
 
 } // namespace thwmakos

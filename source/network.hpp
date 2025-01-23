@@ -31,8 +31,6 @@ int output_to_int(const matrix &output);
 struct training_sample;
 class data_loader;
 
-constexpr std::array<int, 3> network_layer_size = {28 * 28, 30, 10};
-
 class network
 {
 	public:
@@ -108,11 +106,14 @@ class network
 			}
 		};
 
+		// stochastic gradient descent
 		// minimise cost function based on the arguments	
-		void stochastic_gradient_descent(const data_loader &dl, std::span<const int> sample_indices, FloatType learning_rate);
+		void sgd(const data_loader &dl, std::span<const int> sample_indices, FloatType learning_rate);
 
-		// adjust weights and biases for a single training sample
-		gradient backpropagation(const training_sample &) const;
+		// calculate partial derivates with respect to 
+		// weights and biases for a matrix of training samples, where 
+		// each column of the input matrix corresponds to an input
+		gradient backpropagation(const matrix &inputs, const matrix &expected_outputs) const; 
 
 		// each element is the number of neurons in the corresponding layer
 		// first element should be 28 * 28, last element should be 10

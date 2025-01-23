@@ -22,6 +22,8 @@ using thwmakos::matrix;
 using thwmakos::network;
 using thwmakos::data_loader;
 
+constexpr std::array network_layer_size = { 28 * 28, 30, 10 };
+
 // try various tests on the Matrix class
 TEST_CASE("testing matrix class")
 {
@@ -80,11 +82,19 @@ TEST_CASE("testing matrix class")
 	mat5 += 2.0f * mat5;
 	mat5 -= mat6;
 	CHECK(mat6 == mat5);
+
+	matrix mat7 {{1.0f, 2.0f, 3.0f, 4.0f}, {5.0f, 6.0f, 7.0f, 8.0f}, {9.0f, 10.0f, 11.0f, 12.0f}};
+	matrix col1 {{1.0f}, {2.0f}, {3.0f}};
+
+	CHECK(add_column(mat7, col1) == matrix {{2.0f, 3.0f, 4.0f, 5.0f}, {7.0f, 8.0f, 9.0f, 10.0f}, {12.0f, 13.0f, 14.0f, 15.0f}});
+
+	CHECK(get_column(mat7, 1) == matrix {{2.0f}, {6.0f}, {10.0f}});
+	REQUIRE_THROWS(get_column(mat7, 4));
 }
 
 TEST_CASE("testing network class")
 {
-	network nwk(std::span { thwmakos::network_layer_size });
+	network nwk(std::span { network_layer_size });
 
 	//std::cout << "biases[1] \n" << nwk.m_biases[1].size().first << ' ' << nwk.m_biases[1].size().second << '\n';
 		
@@ -138,7 +148,7 @@ TEST_CASE("testing data_loader")
 
 TEST_CASE("testing network training")
 {
-	network nwk { thwmakos::network_layer_size };
+	network nwk { network_layer_size };
 	
 	//std::cout << "testing backpropagation:\n";
 	//std::cout << "random biases of last layer:\n";
@@ -146,12 +156,14 @@ TEST_CASE("testing network training")
 	
 	// test if dimensions check in backpropagation()
 	// using a dummy sample	
-	network::gradient grad { thwmakos::network_layer_size };
+	network::gradient grad { network_layer_size };
+	network::gradient grad2 { network_layer_size };
 	thwmakos::training_sample sample;
 	sample.image = matrix(28 * 28, 1);
 	sample.label = matrix(10, 1);
 
 	REQUIRE_NOTHROW(grad = nwk.backpropagation(sample));
+	REQUIRE_NOTHROW(grad2 = nwk.backpropagation_multiple(sample.image, sample.label));
 	
 	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());
 	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());
@@ -162,5 +174,8 @@ TEST_CASE("testing network training")
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 
-	//nwk.train(20, 10, 3.0f);
+	CHECK(grad.weights[0] == grad2.weights[0]);
+	CHECK(grad.weights[1] == grad2.weights[1]);
+
+	nwk.train(1, 10, 3.0f);
 }
