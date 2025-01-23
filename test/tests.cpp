@@ -157,13 +157,11 @@ TEST_CASE("testing network training")
 	// test if dimensions check in backpropagation()
 	// using a dummy sample	
 	network::gradient grad { network_layer_size };
-	network::gradient grad2 { network_layer_size };
 	thwmakos::training_sample sample;
 	sample.image = matrix(28 * 28, 1);
 	sample.label = matrix(10, 1);
 
-	REQUIRE_NOTHROW(grad = nwk.backpropagation(sample));
-	REQUIRE_NOTHROW(grad2 = nwk.backpropagation_multiple(sample.image, sample.label));
+	REQUIRE_NOTHROW(grad = nwk.backpropagation(sample.image, sample.label));
 	
 	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());
 	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());
@@ -173,9 +171,6 @@ TEST_CASE("testing network training")
 	CHECK(grad.biases[0].num_rows() == nwk.m_biases[0].num_rows());
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
 	CHECK(grad.biases[1].num_cols() == nwk.m_biases[1].num_cols());
-
-	CHECK(grad.weights[0] == grad2.weights[0]);
-	CHECK(grad.weights[1] == grad2.weights[1]);
 
 	nwk.train(1, 10, 3.0f);
 }

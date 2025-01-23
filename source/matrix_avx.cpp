@@ -186,7 +186,7 @@ matrix multiply_avx512(const matrix &A, const matrix &B)
 	// by the parameters below
 	constexpr int num_lanes = 16;
 	constexpr int num_submatrix_rows = 12;             // submatrix size needs to be adjusted to CPU
-	constexpr int num_submatrix_cols = 2 * num_lanes; // these parameters provide 20x performance boost to
+	constexpr int num_submatrix_cols = 1 * num_lanes; // these parameters provide 20x performance boost to
 													  // naive implementation on intel tgl (i7 11800H CPU)
 	// the number of columns is a multiple of 16 which 
 	// is how many single precision floats an avx512 
@@ -248,12 +248,12 @@ matrix &add_to_avx512(matrix &left, const matrix &right)
 	// handle the rest of the elements
 	__mmask16 mask = (1u << (num_elements - i)) - 1u;
 
-	__m512 left_reg  = _mm512_maskz_load_ps(mask, left_data + i);
-	__m512 right_reg = _mm512_maskz_load_ps(mask, right_data + i);
+	__m512 left_reg  = _mm512_maskz_loadu_ps(mask, left_data + i);
+	__m512 right_reg = _mm512_maskz_loadu_ps(mask, right_data + i);
 
 	left_reg = _mm512_add_ps(left_reg, right_reg);
 
-	_mm512_mask_store_ps(left_data + i, mask, left_reg);
+	_mm512_mask_storeu_ps(left_data + i, mask, left_reg);
 
 	return left;
 }

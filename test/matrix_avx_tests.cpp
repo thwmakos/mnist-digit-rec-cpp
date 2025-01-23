@@ -69,11 +69,15 @@ TEST_CASE("test AVX512 add_to")
 	matrix m5 = m4;
 
 	add_to(m4, m3);
+#ifdef __AVX512F__
 	add_to_avx512(m5, m3);
+#endif
 
 	m1 += m2;
 	CHECK(m1 == add_to(m1_copy, m2));
+#ifdef __AVX512F__
 	CHECK(m4 == m5);
+#endif
 }
 
 TEST_CASE("test AVX512 matrix multiplication")
