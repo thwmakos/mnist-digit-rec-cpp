@@ -107,12 +107,12 @@ void submatrix_avx512(const matrix &A, const matrix &B, matrix &C, int num_row, 
 			{
 				if(masks[j] != 0)
 				{
-					C_submatrix[i][j] = _mm512_maskz_loadu_ps(masks[j], &C_data[C_load_index + num_lanes * j]);
+					C_submatrix[i][j] = _mm512_maskz_loadu_ps(masks[j], C_data + C_load_index + num_lanes * j);
 				}
 			}
 			else
 			{
-				C_submatrix[i][j] = _mm512_loadu_ps(&C_data[C_load_index + num_lanes * j]);
+				C_submatrix[i][j] = _mm512_loadu_ps(C_data + C_load_index + num_lanes * j);
 			}
 		}
 	}
@@ -129,12 +129,12 @@ void submatrix_avx512(const matrix &A, const matrix &B, matrix &C, int num_row, 
 			{
 				if(masks[j] != 0)
 				{
-					b_row[j] = _mm512_maskz_loadu_ps(masks[j], &B_data[B_load_index + num_lanes * j]);
+					b_row[j] = _mm512_maskz_loadu_ps(masks[j], B_data + B_load_index + num_lanes * j);
 				}
 			}
 			else
 			{
-				b_row[j] = _mm512_loadu_ps(&B_data[B_load_index + num_lanes * j]);
+				b_row[j] = _mm512_loadu_ps(B_data + B_load_index + num_lanes * j);
 			}
 		}
 
@@ -162,12 +162,12 @@ void submatrix_avx512(const matrix &A, const matrix &B, matrix &C, int num_row, 
 			{
 				if(masks[j] != 0)
 				{
-					_mm512_mask_storeu_ps(&C_data[C_store_index + num_lanes * j], masks[j], C_submatrix[i][j]);
+					_mm512_mask_storeu_ps(C_data + C_store_index + num_lanes * j, masks[j], C_submatrix[i][j]);
 				}
 			}
 			else
 			{
-				_mm512_storeu_ps(&C_data[C_store_index + num_lanes * j], C_submatrix[i][j]);
+				_mm512_storeu_ps(C_data + C_store_index + num_lanes * j, C_submatrix[i][j]);
 			}
 		}
 	}
@@ -336,11 +336,11 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 			if constexpr(masked)
 			{
 				// if non-zero mask 
-				C_submatrix[i][j] = _mm256_maskload_ps(&C_data[C_load_index + num_lanes * j], masks[j]);
+				C_submatrix[i][j] = _mm256_maskload_ps(C_data + C_load_index + num_lanes * j, masks[j]);
 			}
 			else
 			{
-				C_submatrix[i][j] = _mm256_loadu_ps(&C_data[C_load_index + num_lanes * j]);
+				C_submatrix[i][j] = _mm256_loadu_ps(C_data + C_load_index + num_lanes * j);
 			}
 		}
 	}
@@ -355,11 +355,11 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 		{
 			if constexpr(masked)
 			{
-				b_row[j] = _mm256_maskload_ps(&B_data[B_load_index + num_lanes * j], masks[j]);
+				b_row[j] = _mm256_maskload_ps(B_data + B_load_index + num_lanes * j, masks[j]);
 			}
 			else
 			{
-				b_row[j] = _mm256_loadu_ps(&B_data[B_load_index + num_lanes * j]);
+				b_row[j] = _mm256_loadu_ps(B_data + B_load_index + num_lanes * j);
 			}
 		}
 
@@ -385,11 +385,11 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 		{
 			if constexpr(masked)
 			{
-				_mm256_maskstore_ps(&C_data[C_store_index + num_lanes * j], masks[j], C_submatrix[i][j]);
+				_mm256_maskstore_ps(C_data + C_store_index + num_lanes * j, masks[j], C_submatrix[i][j]);
 			}
 			else
 			{
-				_mm256_storeu_ps(&C_data[C_store_index + num_lanes * j], C_submatrix[i][j]);
+				_mm256_storeu_ps(C_data + C_store_index + num_lanes * j, C_submatrix[i][j]);
 			}
 		}
 	}
