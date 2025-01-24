@@ -147,7 +147,7 @@ class matrix
 			return std::make_pair(m_num_rows, m_num_columns);
 		}
 
-		// resize the matrix
+		// resize the matrix to a new arbitrary size
 		// this operation discards all the matrix data
 		// and zeroes out all of the new entries
 		void set_size(int new_num_rows, int new_num_cols)
@@ -167,6 +167,23 @@ class matrix
 		{
 			set_size(new_size.first, new_size.second);
 		}
+
+		// reinterpret the size of the matrix while keeping its data the 
+		// total amount of elements before and after has to be the shape
+		// main use it to convert a column vector to a row vector 
+		matrix &reshape(int new_num_rows, int new_num_cols)
+		{
+			if(new_num_rows * new_num_cols != m_num_rows * m_num_columns)
+			{
+				throw std::invalid_argument(std::format("cannot reshape ({}, {}) to ({}, {})", 
+							m_num_rows, m_num_columns, new_num_rows, new_num_cols));
+			}
+			
+			m_num_rows    = new_num_rows;
+			m_num_columns = new_num_cols;
+
+			return *this;
+		}	
 
 		// get number of rows of the matrix
 		int num_rows() const { return m_num_rows; }
@@ -257,9 +274,7 @@ class matrix
 		std::vector<FloatType> m_data;
 };
 
-std::ostream & operator<<(std::ostream&, const matrix&);
 
-bool operator==(const matrix&, const matrix&);
 
 // multiply two matrices
 matrix multiply(const matrix&, const matrix&);
@@ -270,9 +285,17 @@ matrix multiply_naive(const matrix &, const matrix &);
 // simple non-SIMD function to add the second operand to the first
 matrix &add_to(matrix &, const matrix &);
 
-// multiply two matrices element wise, that is c_{ij} = a_{ij} * b_{ij}
+// multiply every element of left by the corresponding element of right
+// left[i, j] *= right[i, j]
+// modifies left argument
 // matrices must have the same dimensions
-matrix elementwise_multiply(const matrix&, const matrix&);
+matrix &elementwise_multiply_inplace(matrix &left, const matrix &right);
+
+// multiply two matrices element wise, that is c_{ij} = a_{ij} * b_{ij}
+// and return a *new* matrix 
+// first argument taken by value to allow move construction of temporaries
+// similarly to the addition/multiply by scalar operations
+matrix elementwise_multiply(matrix left, const matrix &right);
 
 // apply func to every element of the matrix and return a new matrix
 // test concepts btw
@@ -288,8 +311,10 @@ matrix elementwise_apply(const matrix &mat, std::regular_invocable<FloatType> au
 	return result;
 }
 
-// add column to each column of mat
-matrix add_column(const matrix &mat, const matrix &column);
+// add the column to each column of mat, modifying mat
+matrix &add_column_inplace(matrix &mat, const matrix &column);
+// add column to each column of mat returning a new matrix
+matrix add_column(matrix mat, const matrix &column);
 
 // extract the column of mat indicated by index
 matrix get_column(const matrix &mat, int index);
@@ -308,16 +333,23 @@ matrix operator-(const matrix &mat);
 matrix operator+(matrix left, const matrix &right);
 matrix operator-(matrix left, const matrix &right);
 
-// compound add/subtract
+// compound add/subtract/(multiply by scalar)
 // they modify their argument instead of creating new matrix
-matrix& operator+=(matrix &left, const matrix &right);
-matrix& operator-=(matrix &left, const matrix &right);
+matrix &operator+=(matrix &left, const matrix &right);
+matrix &operator-=(matrix &left, const matrix &right);
+matrix &operator*=(matrix &left, FloatType scalar);
 
 // matrix multiplication
 matrix operator*(const matrix &left, const matrix &right);
 
 // multiply a matrix by a scalar (element-wise)
-matrix operator*(FloatType scalar, const matrix &mat);
+matrix operator*(FloatType scalar, matrix mat);
+matrix operator*(matrix mat, FloatType scalar);
+
+bool operator==(const matrix &, const matrix &);
+bool operator!=(const matrix &, const matrix &);
+
+std::ostream & operator<<(std::ostream&, const matrix&);
 
 } // namespace thwmakos
 

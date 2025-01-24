@@ -185,8 +185,9 @@ matrix multiply_avx512(const matrix &A, const matrix &B)
 	// C in smaller submatrices of dimensions given
 	// by the parameters below
 	constexpr int num_lanes = 16;
-	constexpr int num_submatrix_rows = 12;             // submatrix size needs to be adjusted to CPU
-	constexpr int num_submatrix_cols = 1 * num_lanes; // these parameters provide 20x performance boost to
+	constexpr int num_submatrix_rows = 2;             // submatrix size needs to be adjusted to CPU
+													  // and matrix sizes
+	constexpr int num_submatrix_cols = 4 * num_lanes; // these parameters provide 20x performance boost to
 													  // naive implementation on intel tgl (i7 11800H CPU)
 	// the number of columns is a multiple of 16 which 
 	// is how many single precision floats an avx512 
@@ -224,7 +225,9 @@ matrix multiply_avx512(const matrix &A, const matrix &B)
 
 // does left += right and then returns left
 // dimensions of dimensions are checked in caller
-matrix &add_to_avx512(matrix &left, const matrix &right)
+// processes N * num_lanes elements every iteration
+template<int N>
+matrix &add_to_avx512_internal(matrix &left, const matrix &right)
 {
 	constexpr int num_lanes = 16;
 	
@@ -235,6 +238,30 @@ matrix &add_to_avx512(matrix &left, const matrix &right)
 
 	int i = 0;
 
+	std::array<__m512, N> left_regs;
+	std::array<__m512, N> right_regs;
+
+	for(; i + N * num_lanes < num_elements; i += N * num_lanes)
+	{
+		for(int j = 0; j < N; ++j)
+		{
+			left_regs[j]  = _mm512_loadu_ps(left_data + i * j);
+			right_regs[j] = _mm512_loadu_ps(right_data + i * j);
+		}
+		
+		for(int j = 0; j < N; ++j)
+		{
+			left_regs[j] = _mm512_add_ps(left_regs[j], right_regs[j]);
+		}
+		
+		for(int j = 0; j < N; ++j)
+		{
+			_mm512_storeu_ps(left_data + i * j, left_regs[j]);
+		}
+	}
+	
+	// if there are less that N * num_lanes but more than num_lanes elements
+	// process them by num_lanes at once	
 	for(; i + num_lanes < num_elements; i += num_lanes)
 	{
 		__m512 left_reg  = _mm512_loadu_ps(left_data + i);
@@ -257,6 +284,14 @@ matrix &add_to_avx512(matrix &left, const matrix &right)
 
 	return left;
 }
+
+matrix &add_to_avx512(matrix &left, const matrix &right)
+{
+	// testing shows that changing 1 below to a different 
+	// value is not beneficial
+	return add_to_avx512_internal<1>(left, right);
+}
+
 
 #endif // __AVX512F__
 

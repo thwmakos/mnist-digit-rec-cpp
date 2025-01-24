@@ -117,48 +117,56 @@ matrix transpose(const matrix &mat)
 	return result;
 }
 
-matrix elementwise_multiply(const matrix &left, const matrix &right)
+matrix &elementwise_multiply_inplace(matrix &left, const matrix &right)
 {
 	if(left.size() != right.size())
 	{
-		throw std::invalid_argument(std::format("elementwise_multiply: mismatched dimensions ({}, {}) and ({}, {})",
+		throw std::invalid_argument(std::format("elementwise_multiply_inplace: mismatched dimensions ({}, {}) and ({}, {})",
 				left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
 	}	
-
+	
 	const auto [num_rows, num_cols] = left.size();
-	matrix result(num_rows, num_cols);
 	
 	for(auto i = 0; i < num_rows; ++i)
 	{
 		for(auto j = 0; j < num_cols; ++j)
 		{
-			result[i, j] = left[i, j] * right[i, j];
+			left[i, j] *= right[i, j];
 		}
 	}
 
-	return result;
+	return left;
 }
 
-matrix add_column(const matrix &mat, const matrix &column)
+matrix elementwise_multiply(matrix left, const matrix &right)
+{
+	elementwise_multiply_inplace(left, right);
+	return left;
+}
+
+matrix &add_column_inplace(matrix &mat, const matrix &column)
 {
 	if(column.num_cols() != 1 || mat.num_rows() != column.num_rows())
 	{
-		throw std::invalid_argument(std::format("add_column: mismatched dimensions ({}, {}) and ({}, {})",
+		throw std::invalid_argument(std::format("add_column_inplace: mismatched dimensions ({}, {}) and ({}, {})",
 				mat.num_rows(), mat.num_cols(), column.num_rows(), column.num_cols()));	
 	}
-
-	// make a copy
-	matrix ret(mat);
-
-	for(int i = 0; i < mat.num_rows(); ++i)
+	
+	for(auto i = 0; i < mat.num_rows(); ++i)
 	{
-		for(int j = 0; j < mat.num_cols(); ++j)
+		for(auto j = 0; j < mat.num_cols(); ++j)
 		{
-			ret[i, j] += column[i, 0];
+			mat[i, j] -= column[i, 0];
 		}
 	}
 
-	return ret;
+	return mat;
+}
+
+matrix add_column(matrix mat, const matrix &column)
+{
+	add_column_inplace(mat, column);
+	return mat;
 }
 
 matrix get_column(const matrix &mat, int index)
@@ -233,6 +241,11 @@ bool operator==(const matrix &left, const matrix &right)
 	return true;
 }
 
+bool operator!=(const matrix &left, const matrix &right)
+{
+	return !(left == right);
+}
+
 matrix operator+(const matrix &mat)
 {
 	return mat;
@@ -297,24 +310,37 @@ matrix &operator-=(matrix &left, const matrix &right)
 	return left;
 }
 
+// matrix multiplication
 matrix operator*(const matrix &left, const matrix &right)
 {
 	return multiply(left, right);
 }
 
-matrix operator*(FloatType scalar, const matrix &mat)
+// scalar-matrix multiplication
+matrix &operator*=(matrix &mat, FloatType scalar)
 {
-	matrix res(mat.size());
-
 	for(auto row = 0; row < mat.num_rows(); ++row)
 	{
-		for(auto col = 0; col < mat.num_cols(); col++)
+		for(auto col = 0; col < mat.num_cols(); ++col)
 		{
-			res[row, col] = scalar * mat[row, col];	
+			mat[row, col] *= scalar;
 		}
 	}
 
-	return res;
+	return mat;
 }
+
+matrix operator*(FloatType scalar, matrix mat)
+{
+	mat *= scalar;
+	return mat;
+}
+
+matrix operator*(matrix mat, FloatType scalar)
+{
+	mat *= scalar;
+	return mat;
+}
+
 
 } // namespace thwmakos

@@ -270,7 +270,7 @@ network::gradient network::backpropagation(const matrix &inputs, const matrix &e
 	{
 		// z^l = w^l * a^{l - 1} + b^l
 		// z^l is a matrix with each column representing the activation of each training sample
-		auto weighted_input = add_column(multiply(m_weights[i], activations.back()), m_biases[i]);
+		auto weighted_input = add_column(m_weights[i] * activations.back(), m_biases[i]);
 		
 		activations.push_back(elementwise_apply(weighted_input, sigmoid));
 		weighted_inputs.push_back(std::move(weighted_input));
@@ -293,12 +293,13 @@ network::gradient network::backpropagation(const matrix &inputs, const matrix &e
 	for(int j = 0; j < num_samples; ++j)
 	{
 		auto delta_column = get_column(delta, j);
-		total_gradient.weights[num_layers - 2] += (1.0 / num_samples) * multiply(delta_column, transpose(get_column(activations[num_layers - 2], j))); 	
+		// using the reshape member here and below to avoid extra allocation
+		total_gradient.weights[num_layers - 2] += (1.0 / num_samples) * delta_column * get_column(activations[num_layers - 2], j).reshape(1, activations[num_layers - 2].num_rows()); 	
 		total_gradient.biases[num_layers - 2]  += (1.0 / num_samples) * delta_column;
 	}
 	
 	// rest of the layers
-	for(int i = static_cast<int>(num_layers - 3); i >= 0; --i)
+	for(int i = num_layers - 3; i >= 0; --i)
 	{
 		delta = elementwise_multiply(
 				multiply(transpose(m_weights[i + 1]), delta),
@@ -309,21 +310,11 @@ network::gradient network::backpropagation(const matrix &inputs, const matrix &e
 			// \pdv{C}{b^l} = δ^l
 			// \pdv{C}{w^l_{jk} = a^{l-1}_k δ^l_j
 			auto delta_column = get_column(delta, j);
-			total_gradient.weights[i] += (1.0 / num_samples) * multiply(delta_column, transpose(get_column(activations[i], j)));
+			total_gradient.weights[i] += (1.0 / num_samples) * delta_column * get_column(activations[i], j).reshape(1, activations[i].num_rows());
 			total_gradient.biases[i]  += (1.0 / num_samples) * delta_column;
 		}
 	}
 	
-	// calculate total gradient by summing corresponding quantities	
-//	for(int i = 0; i < num_layers - 1; ++i)
-//	{
-//		for(int j = 0; j < num_samples; ++j)
-//		{
-//			total_gradient.weights[i] += (1.0 / num_samples) * gradients[j].weights[i];
-//			total_gradient.biases[i]  += (1.0 / num_samples) * gradients[j].biases[i];
-//		}
-//	}
-
 	return total_gradient;
 }
 
