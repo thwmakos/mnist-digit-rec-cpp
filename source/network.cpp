@@ -114,7 +114,7 @@ network::network(std::span<const int> network_layers) :
 	m_weights(m_layers.size() - 1),
 	m_biases(m_layers.size() - 1)
 {
-	if(*network_layers.cbegin() != 28 * 28 || *(network_layers.cend() - 1) != 10)
+	if(*network_layers.begin() != 28 * 28 || *(network_layers.end() - 1) != 10)
 	{
 		throw std::invalid_argument(std::format(
 			"Input layer should have 28 * 28 neurons, output should have 10, found {} and {}",
@@ -130,7 +130,7 @@ network::network(std::span<const int> network_layers) :
 	// resize weight matrices in grad
 	
 	std::for_each(m_weights.begin(), m_weights.end(), 
-			[layers_it = m_layers.cbegin()] (auto &w) mutable
+			[layers_it = m_layers.begin()] (auto &w) mutable
 			{
 				const int num_rows = *(layers_it + 1);
 				const int num_cols = *layers_it;
@@ -139,7 +139,7 @@ network::network(std::span<const int> network_layers) :
 			});
 	// resize bias matrices in grad
 	std::for_each(m_biases.begin(), m_biases.end(),
-			[layers_it = m_layers.cbegin()] (auto &b) mutable
+			[layers_it = m_layers.begin()] (auto &b) mutable
 			{
 				const int num_rows = *(layers_it + 1);
 				b.set_size(num_rows, 1);
