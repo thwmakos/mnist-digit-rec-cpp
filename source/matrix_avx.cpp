@@ -185,9 +185,9 @@ matrix multiply_avx512(const matrix &A, const matrix &B)
 	// C in smaller submatrices of dimensions given
 	// by the parameters below
 	constexpr int num_lanes = 16;
-	constexpr int num_submatrix_rows = 2;             // submatrix size needs to be adjusted to CPU
+	constexpr int num_submatrix_rows = 8;             // submatrix size needs to be adjusted to CPU
 													  // and matrix sizes
-	constexpr int num_submatrix_cols = 4 * num_lanes; // these parameters provide 20x performance boost to
+	constexpr int num_submatrix_cols = 3 * num_lanes; // these parameters provide 20x performance boost to
 													  // naive implementation on intel tgl (i7 11800H CPU)
 	// the number of columns is a multiple of 16 which 
 	// is how many single precision floats an avx512 
