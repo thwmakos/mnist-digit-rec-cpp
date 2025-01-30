@@ -69,6 +69,7 @@ concept is_fixed = (Rows != Dynamic && Columns != Dynamic);
 
 
 // support only <Dynamic, Dynamic>, <1 Dynamic> and <Dynamic, 1> for now
+// TODO: support fixed size matrices
 template<int Rows, int Columns> 
 requires (is_both_dynamic<Rows, Columns> || is_dynamic_vector<Rows, Columns>)
 class matrix2d
@@ -76,91 +77,90 @@ class matrix2d
 	public:
 		// default constructor, a matrix without elements
 		matrix2d() 
-		requires is_both_dynamic<Rows, Columns> : 
+			requires is_both_dynamic<Rows, Columns> : 
 			m_num_rows(0),
 			m_num_columns(0),
 			m_data(0)
 		{}
 
 		matrix2d() 
-		requires is_dynamic_row<Rows, Columns> :
-			m_num_rows(1),
-			m_num_columns(0),
+			requires is_dynamic_vector<Rows, Columns> :
+			m_num_rows(Rows == 1 ? 1 : 0),
+			m_num_columns(Columns == 1 ? 1 : 0),
 			m_data(0)
 		{}
-		
-		matrix2d() 
-		requires is_dynamic_column<Rows, Columns> :
-			m_num_rows(0),
-			m_num_columns(1),
-			m_data(0)
-		{}
+	
+	private:
+		struct private_constructor_tag {};
 
-		// construct new matrix with given number of rows and columns
-		explicit matrix2d(int num_rows, int num_columns) 
-		requires is_both_dynamic<Rows, Columns> : 
+		// main constructor, independent of any template parameters
+		// private in order to avoid mismatch between the templated
+		// numbers of rows and columns and the actual number of rows
+		// and columns passed as arguments
+		explicit matrix2d(int num_rows, int num_columns, private_constructor_tag) :
 			m_num_rows(num_rows),
-			m_num_columns(num_columns)
-			// initialise the storage vector with enough space
-			// using the default value of the data type
+			m_num_columns(num_columns),
+			m_data()
 		{
 			if(num_rows <= 0 || num_columns <= 0)
 			{
 				throw std::invalid_argument("number of rows and columns has to be strictly positive");
 			}
 
-			m_data.resize(m_num_rows * m_num_columns, FloatType());
+			m_data.resize(m_num_rows * m_num_columns);
 		}
+		
+		// construct a matrix from raw data, moving data argument into m_data
+		explicit matrix2d(int num_rows, int num_columns, std::vector<FloatType> &&data, private_constructor_tag) :
+			m_num_rows(num_rows),
+			m_num_columns(num_columns),
+			m_data(std::move(data))
+		{
+			if(num_rows <= 0 || num_columns <= 0)
+			{
+				throw std::invalid_argument("number of rows and columns has to be strictly positive");
+			}
+			
+			if(static_cast<int>(m_data.size()) != m_num_rows * m_num_columns)
+			{
+				throw std::invalid_argument(std::format("data should have exactly num_rows * num_columns = {} elements instead of {}",
+							m_num_rows * m_num_columns, m_data.size()));
+			}
+		}
+
+	public:
+		// construct new matrix with given number of rows and columns
+		explicit matrix2d(int num_rows, int num_columns) 
+			requires is_both_dynamic<Rows, Columns> : 
+			matrix2d(num_rows, num_columns, private_constructor_tag {})
+		{}
 		
 		// construct zero matrix with given size
 		explicit matrix2d(std::pair<int, int> mat_size) 
-		requires is_both_dynamic<Rows, Columns> : 
-			matrix2d(mat_size.first, mat_size.second)
+			requires is_both_dynamic<Rows, Columns> : 
+			matrix2d(mat_size.first, mat_size.second, private_constructor_tag {})
+		{}
+
+		explicit matrix2d(int length)
+			requires is_dynamic_vector<Rows, Columns> :
+			matrix2d(Rows == 1 ? 1 : length, Columns == 1 ? length : 1, private_constructor_tag {})
 		{}
 		
-		// construct a matrix from raw data, copying data argument into m_data
-		matrix2d(int num_rows, int num_columns, const std::vector<FloatType> &data) :
-			m_num_rows(num_rows),
-			m_num_columns(num_columns)
-		{
-			if(num_rows <= 0 || num_columns <= 0)
-			{
-				throw std::invalid_argument("number of rows and columns has to be strictly positive");
-			}
-			
-			if(static_cast<int>(data.size()) != m_num_rows * m_num_columns)
-			{
-				throw std::invalid_argument("data should have exactly num_rows * num_columns elemetns");
-			}
-			
-			// copy assignment
-			m_data = data;
-		}
-
 		// construct a matrix from raw data, moving data argument into m_data
-		explicit matrix2d(int num_rows, int num_columns, std::vector<FloatType> &&data) 
-		requires is_both_dynamic<Rows, Columns>:
-			m_num_rows(num_rows),
-			m_num_columns(num_columns)
-		{
-			if(num_rows <= 0 || num_columns <= 0)
-			{
-				throw std::invalid_argument("number of rows and columns has to be strictly positive");
-			}
-			
-			if(static_cast<int>(data.size()) != m_num_rows * m_num_columns)
-			{
-				throw std::invalid_argument("data should have exactly num_rows * num_columns elemetns");
-			}
-			
-			// move assignment
-			m_data = data;
-		}
+		explicit matrix2d(int num_rows, int num_columns, std::vector<FloatType> data)
+			requires is_both_dynamic<Rows, Columns> :
+			matrix2d(num_rows, num_columns, std::move(data), private_constructor_tag {})
+		{}
 
+		explicit matrix2d(int length, std::vector<FloatType> data)
+			requires is_dynamic_vector<Rows, Columns> :
+			matrix2d(Rows == 1 ? 1 : length, Columns == 1 ? length : 1, std::move(data), private_constructor_tag {})
+		{}	
+		
 		// construct a matrix with given data
 		// each initializer list is a row, e.g. matrix mat ({{1, 2, 3}, {4, 5, 6}, {7, 8, 9}});
-		explicit matrix2d(std::initializer_list<std::initializer_list<FloatType>> init_data)
-		requires is_both_dynamic<Rows, Columns>
+		matrix2d(std::initializer_list<std::initializer_list<FloatType>> init_data)
+			requires is_both_dynamic<Rows, Columns>
 		{
 			// there should be the same size for all initializer lists of init_data,
 			// that is, all rows should have the same amount of elements
@@ -187,6 +187,14 @@ class matrix2d
 				m_data.insert(m_data.cend(), row);
 			}
 		}
+
+		matrix2d(std::initializer_list<FloatType> init_data)
+			requires is_dynamic_vector<Rows, Columns> :
+			m_num_rows(Rows == 1 ? 1 : static_cast<int>(init_data.size()), 
+					Columns == 1 ? static_cast<int>(init_data.size()) : 1, 
+					std::move(init_data), 
+					private_constructor_tag {})
+		{}
 		
 		// constructors, destructor, assignment operators are sufficient, 
 		// delegate these to the std::vector m_data
@@ -201,11 +209,24 @@ class matrix2d
 			return std::make_pair(m_num_rows, m_num_columns);
 		}
 
+		int length() const 
+			requires is_vector<Rows, Columns>
+		{
+			if constexpr (Rows == 1)
+			{
+				return m_num_columns;
+			}
+			else
+			{
+				return m_num_rows;
+			}
+		}
+
 		// resize the matrix to a new arbitrary size
 		// this operation discards all the matrix data
 		// and zeroes out all of the new entries
 		void set_size(int new_num_rows, int new_num_cols)
-		requires is_dynamic<Rows, Columns>
+			requires is_both_dynamic<Rows, Columns>
 		{
 			if constexpr (!is_both_dynamic<Rows, Columns>)
 			{
@@ -232,7 +253,7 @@ class matrix2d
 		
 		// overload of set_size for convenience
 		void set_size(std::pair<int, int> new_size)
-		requires is_dynamic<Rows, Columns>
+			requires is_both_dynamic<Rows, Columns>
 		{
 			set_size(new_size.first, new_size.second);
 		}
@@ -243,7 +264,7 @@ class matrix2d
 		// leaves the matrix it is called on to a moved-from state unless
 		// both Rows and Columns are dynamic
 		matrix2d &reshape(int new_num_rows, int new_num_cols)
-		requires is_both_dynamic<Rows, Columns>
+			requires is_both_dynamic<Rows, Columns>
 		{
 			if(new_num_rows * new_num_cols != m_num_rows * m_num_columns)
 			{
@@ -292,25 +313,58 @@ class matrix2d
 			return m_data[row * m_num_columns + col];
 		}
 
+		// single index access for row and column vectors
+		FloatType &at(int n)
+			requires is_vector<Rows, Columns>
+		{
+			if constexpr(Rows == 1)
+			{
+				return at(1, n);
+			}
+			else
+			{
+				return at(n, 1);
+			}
+		}
+
+		FloatType at(int n) const
+			requires is_vector<Rows, Columns>
+		{
+			if constexpr(Rows == 1)
+			{
+				return at(1, n);
+			}
+			else
+			{
+				return at(n, 1);
+			}
+		}
+
 		// member function to access the matrix elements
 		// does not do bound checking on debug builds
 		FloatType &operator()(int row, int col)
 		{
-			if constexpr(debug_build)
-				return at(row, col);
-			else
-				return m_data[row * m_num_columns + col];
+			return m_data[row * m_num_columns + col];
 		}
 
 		FloatType operator()(int row, int col) const
 		{
-			if constexpr(debug_build)
-				return at(row, col);
-			else
-				return m_data[row * m_num_columns + col];
+			return m_data[row * m_num_columns + col];
+		}
+
+		FloatType &operator()(int n)
+			requires is_vector<Rows, Columns>
+		{
+			return m_data[n];
+		}
+
+		FloatType operator()(int n) const
+			requires is_vector<Rows, Columns>
+		{
+			return m_data[n];
 		}
 		
-		// C++23 multiple subscript feature
+		// C++23 multiple subscript operator []
 		// same as operator() 	
 		FloatType &operator[](int row, int col)
 		{
@@ -320,6 +374,16 @@ class matrix2d
 		FloatType operator[](int row, int col) const
 		{
 			return operator()(row, col);
+		}
+
+		FloatType &operator[](int n)
+		{
+			return m_data[n];
+		}
+
+		FloatType operator[](int n) const
+		{
+			return m_data[n];
 		}
 		
 		// calculate the index in the vector m_data
@@ -341,21 +405,24 @@ class matrix2d
 		auto crend() const { return m_data.crend(); }
 
 	private:
-		int m_num_rows, m_num_columns; // number of rows and columns in the matrix
+		int m_num_rows;
+		int m_num_columns; // number of rows and columns in the matrix
 
 		std::vector<FloatType> m_data;
 };
 
-using matrix = matrix2d<Dynamic, Dynamic>;
+// a 2d-matrix view into a continuous extend of FloatType values
+struct matrix2d_span
+{
+	const int num_rows;
+	const int num_columns;
 
-template<int Length>
-using row_vector_1d = matrix2d<1, Length>;
+	std::span<FloatType> data;
+};
 
-template<int Length>
-using column_vector_1d = matrix2d<Length, 1>;
-
-using row_vector    = row_vector_1d<Dynamic>;
-using column_vector = column_vector_1d<Dynamic>;
+using matrix        = matrix2d<Dynamic, Dynamic>;
+using row_vector    = matrix2d<1, Dynamic>;
+using column_vector = matrix2d<Dynamic, 1>;
 
 // multiply two matrices
 matrix multiply(const matrix&, const matrix&);
