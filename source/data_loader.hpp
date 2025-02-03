@@ -37,7 +37,7 @@
 // 0 means background (white), 255 means foreground (black).
 
 #include <vector>
-#include <string>
+#include <string_view>
 #include <cstdint>
 
 #include "matrix.hpp"
@@ -60,7 +60,7 @@ struct training_sample
 class data_loader
 {
     public:
-		explicit data_loader(const std::string& image_filename, const std::string& label_filename);
+		explicit data_loader(std::string_view image_filename, std::string_view label_filename);
 	
 		// get a training sample consisting 
 		// - of an image (as a column vector of 28 * 28 entries, with one row after another)

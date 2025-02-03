@@ -20,16 +20,16 @@
 
 namespace thwmakos {
 
-data_loader::data_loader(const std::string& image_filename, const std::string& label_filename)
+data_loader::data_loader(std::string_view image_filename, std::string_view label_filename)
 {
 	std::ifstream image_file, label_file;
 
 	// return an ifstream and find out filesize
-	auto open_file_and_find_filesize = [] (std::ifstream &file, const std::string& filename)
+	auto open_file_and_find_filesize = [] (std::ifstream &file, std::string_view filename)
 	{
 		std::filesystem::path filepath { filename };
 		const auto filesize = std::filesystem::file_size(filepath);
-		file.open(filename, std::ios::in | std::ios::binary);
+		file.open(filename.data(), std::ios::in | std::ios::binary);
 		
 		if(!file.is_open())
 		{
