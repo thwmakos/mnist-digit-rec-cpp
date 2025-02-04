@@ -83,7 +83,7 @@ struct matrix2d_span
 		return data[row * num_columns + col];
 	}
 
-	FloatType operator()(int row, int col) const
+	T operator[](int row, int col) const
 	{
 		return data[row * num_columns + col];
 	}
