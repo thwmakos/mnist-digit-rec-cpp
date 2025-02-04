@@ -88,7 +88,7 @@ class network
 			{
 				// resize weight matrices in grad
 				std::for_each(weights.begin(), weights.end(), 
-						[layers_it = layers.cbegin()] (auto &w) mutable
+						[layers_it = layers.begin()] (auto &w) mutable
 						{
 							const int num_rows = *(layers_it + 1);
 							const int num_cols = *layers_it;
@@ -97,7 +97,7 @@ class network
 						});
 				// resize bias matrices in grad
 				std::for_each(biases.begin(), biases.end(),
-						[layers_it = layers.cbegin()] (auto &b) mutable
+						[layers_it = layers.begin()] (auto &b) mutable
 						{
 							const int num_rows = *(layers_it + 1);
 							b.set_size(num_rows, 1);
