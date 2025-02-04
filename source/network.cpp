@@ -118,7 +118,7 @@ network::network(std::span<const int> network_layers) :
 	{
 		throw std::invalid_argument(std::format(
 			"Input layer should have 28 * 28 neurons, output should have 10, found {} and {}",
-			*network_layers.cbegin(), *(network_layers.cend() - 1)));
+			*network_layers.begin(), *(network_layers.end() - 1)));
 	}
 
 
