@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <concepts>
 #include <algorithm>
+#include <span>
 #include <ostream>
 #include <format>
 #include <sstream> // for the formatter
