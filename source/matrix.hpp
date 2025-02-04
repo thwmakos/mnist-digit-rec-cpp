@@ -67,11 +67,36 @@ concept is_dynamic_vector = (is_dynamic<Rows, Columns> && is_vector<Rows, Column
 template<int Rows, int Columns>
 concept is_fixed = (Rows != Dynamic && Columns != Dynamic);
 
+// a 2d-matrix view into a continuous extend of FloatType values
+// non-owning and non-templated, to be used with functions 
+// performing matrix operations
+template<typename T>
+struct matrix2d_span
+{
+	const int num_rows;
+	const int num_columns;
+
+	std::span<T> data;
+
+	T &operator[](int row, int col)
+	{
+		return data[row * num_columns + col];
+	}
+
+	FloatType operator()(int row, int col) const
+	{
+		return data[row * num_columns + col];
+	}
+};
+
+// immutable and mutable spans
+using const_matrix_span = matrix2d_span<const FloatType>;
+using matrix_span       = matrix2d_span<FloatType>;
 
 // support only <Dynamic, Dynamic>, <1 Dynamic> and <Dynamic, 1> for now
 // TODO: support fixed size matrices
 template<int Rows, int Columns> 
-requires (is_both_dynamic<Rows, Columns> || is_dynamic_vector<Rows, Columns>)
+	requires (is_both_dynamic<Rows, Columns> || is_dynamic_vector<Rows, Columns>)
 class matrix2d
 {
 	public:
@@ -377,11 +402,13 @@ class matrix2d
 		}
 
 		FloatType &operator[](int n)
+			requires is_vector<Rows, Columns>
 		{
 			return m_data[n];
 		}
 
 		FloatType operator[](int n) const
+			requires is_vector<Rows, Columns>
 		{
 			return m_data[n];
 		}
@@ -403,21 +430,17 @@ class matrix2d
 		auto rend() { return m_data.rend(); }
 		auto crbegin() const { return m_data.crbegin(); }
 		auto crend() const { return m_data.crend(); }
+		
+		//operator matrix2d_span() const
+		//{
+		//	return matrix2d_span { m_num_rows, m_num_columns, m_data };
+		//}
 
 	private:
 		int m_num_rows;
 		int m_num_columns; // number of rows and columns in the matrix
 
 		std::vector<FloatType> m_data;
-};
-
-// a 2d-matrix view into a continuous extend of FloatType values
-struct matrix2d_span
-{
-	const int num_rows;
-	const int num_columns;
-
-	std::span<FloatType> data;
 };
 
 using matrix        = matrix2d<Dynamic, Dynamic>;
