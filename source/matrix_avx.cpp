@@ -442,8 +442,8 @@ matrix multiply_avx2(const matrix &A, const matrix &B)
 	// C in smaller submatrices of dimensions given
 	// by the parameters below
 	constexpr int num_lanes = 8;
-	constexpr int num_submatrix_rows = 12;             // submatrix size needs to be adjusted to CPU
-	constexpr int num_submatrix_cols = 1 * num_lanes;  // found these values by trial & error 
+	constexpr int num_submatrix_rows = 8;             // submatrix size needs to be adjusted to CPU
+	constexpr int num_submatrix_cols = 4 * num_lanes;  // found these values by trial & error 
 													   
 	// the number of columns is a multiple of num_lanes which 
 	// is how many single precision floats an avx512 
