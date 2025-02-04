@@ -110,7 +110,7 @@ matrix cost_derivative(const matrix &output_activations, const matrix &label)
 }
 
 network::network(std::span<const int> network_layers) : 
-	m_layers(network_layers.cbegin(), network_layers.cend()),
+	m_layers(network_layers.begin(), network_layers.end()),
 	m_weights(m_layers.size() - 1),
 	m_biases(m_layers.size() - 1)
 {
