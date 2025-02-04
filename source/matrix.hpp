@@ -79,6 +79,7 @@ struct matrix2d_span
 	std::span<T> data;
 
 	T &operator[](int row, int col)
+		requires (!std::is_const_v<T>)
 	{
 		return data[row * num_columns + col];
 	}
@@ -431,10 +432,15 @@ class matrix2d
 		auto crbegin() const { return m_data.crbegin(); }
 		auto crend() const { return m_data.crend(); }
 		
-		//operator matrix2d_span() const
-		//{
-		//	return matrix2d_span { m_num_rows, m_num_columns, m_data };
-		//}
+		operator const_matrix_span() const
+		{
+			return const_matrix_span { m_num_rows, m_num_columns, m_data };
+		}
+
+		operator matrix_span()
+		{
+			return matrix_span { m_num_rows, m_num_columns, m_data };
+		}
 
 	private:
 		int m_num_rows;
