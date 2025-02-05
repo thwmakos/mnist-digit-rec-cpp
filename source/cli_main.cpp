@@ -63,7 +63,7 @@ int main()
 		//std::println("Sample label raw value: {}", sample.label);
 		auto eval = nwk.evaluate(sample.image);
 		std::println("Network evaluation: {}", output_to_int(eval));
-		std::println("Raw network evaluation: {}", eval);
+		std::println("Raw network evaluation: {:.2f}", eval);
 	}
 
     return 0;

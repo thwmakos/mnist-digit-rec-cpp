@@ -533,18 +533,49 @@ std::ostream & operator<<(std::ostream&, const matrix&);
 
 
 // std::formatter specialisation
-template<> struct std::formatter<thwmakos::matrix>
+template<int Rows, int Columns, typename CharT> 
+struct std::formatter<thwmakos::matrix2d<Rows, Columns>, CharT>
 {
+	std::formatter<thwmakos::FloatType, CharT> value_formatter;
+
 	constexpr auto parse(std::format_parse_context &pc)
 	{
-		return pc.begin();
+		return value_formatter.parse(pc);
 	}
 
-	auto format(const thwmakos::matrix &mat, std::format_context &fc) const
+	auto format(const thwmakos::matrix2d<Rows, Columns> &mat, std::format_context &fc) const
 	{
-		std::ostringstream stream;
-		stream << mat;
-		return std::format_to(fc.out(), "{}", stream.str());
+		auto out = fc.out();
+
+		*out++ = '[';
+
+		for(int i = 0; i < mat.num_rows(); ++i)
+		{
+			// two spaces for alignment
+			if(i > 0)
+			{
+				*out++ = ' ';
+				*out++ = ' ';
+			}
+
+			for(int j = 0; j < mat.num_cols(); ++j)
+			{
+				out = value_formatter.format(mat[i, j], fc);
+				*out++ = ' ';
+			}
+			
+			// if last row print ] instead of changing line
+			if(i < mat.num_rows() - 1)
+			{
+				*out++ = '\n';
+			}
+			else
+			{
+				*out++ = ']';
+			}
+		}
+
+		return out;
 	}
 };
 
