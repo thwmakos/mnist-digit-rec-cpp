@@ -40,7 +40,7 @@ using array2d = std::array<std::array<T, num_cols>, num_rows>;
 // each row of b's will be loaded to a small number of __m512 variables
 // equal to num_submatrix_cols / 16
 template<int num_submatrix_rows, int num_submatrix_cols, bool masked>
-void submatrix_avx512(const matrix &A, const matrix &B, matrix &C, int num_row, int num_col)
+void submatrix_avx512(const_matrix_span A, const_matrix_span B, matrix_span C, int num_row, int num_col)
 {
 	constexpr int num_lanes = 16;
 
@@ -56,16 +56,16 @@ void submatrix_avx512(const matrix &A, const matrix &B, matrix &C, int num_row, 
 	//std::span<const float> A_data { A.data().data(), A.data().size() };
 	//std::span<const float> B_data { B.data().data(), B.data().size() };
 	//std::span<float> C_data { C.data().data(), C.data().size() };
-	const float *A_data = A.data().data();
-	const float *B_data = B.data().data();
-	float *C_data = C.data().data();
+	const float *A_data = A.data.data(); 	
+	const float *B_data = B.data.data();
+	float *C_data = C.data.data();
 	
 	// process an appropriately sized part of C, or less if that is not available 	
 	const auto [actual_rows, actual_cols] = [&] {
 		if constexpr(masked)
 		{
-			return std::pair { std::min(C.num_rows() - num_row, num_submatrix_rows),
-					std::min(C.num_cols() - num_col, num_submatrix_cols) };
+			return std::pair { std::min(C.num_rows - num_row, num_submatrix_rows),
+					std::min(C.num_columns - num_col, num_submatrix_cols) };
 		}
 		else
 		{
@@ -119,7 +119,7 @@ void submatrix_avx512(const matrix &A, const matrix &B, matrix &C, int num_row, 
 	
 	// loop over every row of C_submatrix calculating its value
 	// to do this loop over the rows of B as described above
-	for(int i = 0; i < B.num_rows(); ++i)
+	for(int i = 0; i < B.num_rows; ++i)
 	{
 		// load num_submatrix_cols elements from the current row of B
 		const int B_load_index = B.index(i, num_col);
@@ -173,14 +173,11 @@ void submatrix_avx512(const matrix &A, const matrix &B, matrix &C, int num_row, 
 	}
 }
 
-matrix multiply_avx512(const matrix &A, const matrix &B)
+void multiply_avx512(matrix_span C, const_matrix_span A, const_matrix_span B)
 {
 	// the function only works with single precision floats
 	static_assert(std::is_same_v<FloatType, float>);
 
-	// matrix to be returned
-	matrix C(A.num_rows(), B.num_cols());
-	
 	// we calculate the product C = A * B by computing
 	// C in smaller submatrices of dimensions given
 	// by the parameters below
@@ -192,20 +189,17 @@ matrix multiply_avx512(const matrix &A, const matrix &B)
 	// the number of columns is a multiple of 16 which 
 	// is how many single precision floats an avx512 
 	// register stores
-	// 
-	// calculating each submatrix is called calculating
-	// a 'kernel' usually
 	int i = 0;	
 	
 	// make sure there are enough rows for a submatrix
-	for(; i + num_submatrix_rows <= C.num_rows(); i += num_submatrix_rows)
+	for(; i + num_submatrix_rows <= C.num_rows; i += num_submatrix_rows)
 	{
 		int j = 0;
 		// if there are enough columns for a submatrix we call submatrix()
 		// with masked set to false
 		// otherwise we need to mask some columns at the trailing edge 
 		// so we call submatrix with masked set to true
-		for(; j + num_submatrix_cols <= C.num_cols(); j += num_submatrix_cols)
+		for(; j + num_submatrix_cols <= C.num_columns; j += num_submatrix_cols)
 		{
 			//std::println("submatrix starting at {}, {}", i, j);
 			submatrix_avx512<num_submatrix_rows, num_submatrix_cols, false>(A, B, C, i, j);
@@ -215,12 +209,10 @@ matrix multiply_avx512(const matrix &A, const matrix &B)
 	}
 
 	// handle any leftover columns
-	for(int j = 0; j < C.num_cols(); j += num_submatrix_cols)
+	for(int j = 0; j < C.num_columns; j += num_submatrix_cols)
 	{
 		submatrix_avx512<num_submatrix_rows, num_submatrix_cols, true>(A, B, C, i, j);
 	}
-
-	return C;
 }
 
 // does left += right and then returns left
@@ -299,7 +291,7 @@ matrix &add_to_avx512(matrix &left, const matrix &right)
 
 // AVX2 implementation of previous functions
 template<int num_submatrix_rows, int num_submatrix_cols, bool masked>
-void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, int num_col)
+void submatrix_avx2(const_matrix_span A, const_matrix_span B, matrix_span C, int num_row, int num_col)
 {
 	constexpr int num_lanes = 8;
 
@@ -314,16 +306,16 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 	// get pointers to raw data first 
 	// can't use spans here because it is not simple to compare a mask to zero and compiler
 	// complains for out of bounds access when all lanes are disabled in the mask
-	const float *A_data = A.data().data();
-	const float *B_data = B.data().data();
-	float  *C_data =C.data().data();
+	const float *A_data = A.data.data();
+	const float *B_data = B.data.data();
+	float  *C_data = C.data.data();
 	
 	// process an appropriately sized part of C, or less if that is not available 	
 	const auto [actual_rows, actual_cols] = [&] {
 		if constexpr(masked)
 		{
-			return std::pair { std::min(C.num_rows() - num_row, num_submatrix_rows),
-					std::min(C.num_cols() - num_col, num_submatrix_cols) };
+			return std::pair { std::min(C.num_rows - num_row, num_submatrix_rows),
+					std::min(C.num_columns - num_col, num_submatrix_cols) };
 		}
 		else
 		{
@@ -382,7 +374,7 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 	
 	// loop over every row of C_submatrix calculating its value
 	// to do this loop over the rows of B as described above
-	for(int i = 0; i < B.num_rows(); ++i)
+	for(int i = 0; i < B.num_rows; ++i)
 	{
 		// load num_submatrix_cols elements from the current row of B
 		const int B_load_index = B.index(i, num_col);
@@ -430,13 +422,10 @@ void submatrix_avx2(const matrix &A, const matrix &B, matrix &C, int num_row, in
 	}
 }
 
-matrix multiply_avx2(const matrix &A, const matrix &B)
+void multiply_avx2(matrix_span C, const_matrix_span A, const_matrix_span B)
 {
 	// the function only works with single precision floats
 	static_assert(std::is_same_v<FloatType, float>);
-
-	// matrix to be returned
-	matrix C(A.num_rows(), B.num_cols());
 	
 	// we calculate the product C = A * B by computing
 	// C in smaller submatrices of dimensions given
@@ -454,14 +443,14 @@ matrix multiply_avx2(const matrix &A, const matrix &B)
 	int i = 0;	
 	
 	// make sure there are enough rows for a submatrix
-	for(; i + num_submatrix_rows <= C.num_rows(); i += num_submatrix_rows)
+	for(; i + num_submatrix_rows <= C.num_rows; i += num_submatrix_rows)
 	{
 		int j = 0;
 		// if there are enough columns for a submatrix we call submatrix()
 		// with masked set to false
 		// otherwise we need to mask some columns at the trailing edge 
 		// so we call submatrix with masked set to true
-		for(; j + num_submatrix_cols <= C.num_cols(); j += num_submatrix_cols)
+		for(; j + num_submatrix_cols <= C.num_columns; j += num_submatrix_cols)
 		{
 			//std::println("submatrix starting at {}, {}", i, j);
 			submatrix_avx2<num_submatrix_rows, num_submatrix_cols, false>(A, B, C, i, j);
@@ -471,12 +460,10 @@ matrix multiply_avx2(const matrix &A, const matrix &B)
 	}
 
 	// handle any leftover columns
-	for(int j = 0; j < C.num_cols(); j += num_submatrix_cols)
+	for(int j = 0; j < C.num_columns; j += num_submatrix_cols)
 	{
 		submatrix_avx2<num_submatrix_rows, num_submatrix_cols, true>(A, B, C, i, j);
 	}
-
-	return C;
 }
 
 #endif // __AVX2__

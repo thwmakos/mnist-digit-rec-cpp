@@ -302,7 +302,7 @@ network::gradient network::backpropagation(const matrix &inputs, const matrix &e
 	for(int i = num_layers - 3; i >= 0; --i)
 	{
 		delta = elementwise_multiply(
-				multiply(transpose(m_weights[i + 1]), delta),
+				transpose(m_weights[i + 1]) * delta,
 				elementwise_apply(weighted_inputs[i], sigmoid_derivative));
 		
 		for(int j = 0; j < num_samples; ++j)

@@ -24,6 +24,20 @@ using thwmakos::data_loader;
 
 constexpr std::array network_layer_size = { 28 * 28, 30, 10 };
 
+auto multiply_helper(const matrix &left, const matrix &right)
+{
+	if(left.num_cols() != right.num_rows())
+	{
+		throw std::invalid_argument("");
+	}
+
+	matrix prod(left.num_rows(), right.num_cols());
+	
+	thwmakos::multiply(prod, left, right);
+
+	return prod;
+}
+
 // try various tests on the Matrix class
 TEST_CASE("testing matrix class")
 {
@@ -51,15 +65,16 @@ TEST_CASE("testing matrix class")
 		{-66.217,9.203,70.95000000000001,-42.42999999999999},
 		{-20.255,-8.057,15.13,-3.090000000000001}};
 
+		
+	REQUIRE_NOTHROW(left * right);
 	
-	REQUIRE_NOTHROW(multiply(left, right));
-	auto product = multiply(left, right);	
+	auto product = multiply_helper(left, right);	
 
 	CHECK(product == expected_product);	
 	CHECK(left * right == product);
 	CHECK(3.0f * left * right == product + product + product);
 
-	REQUIRE_THROWS_AS(multiply(mat1, mat3), const std::invalid_argument&);
+	REQUIRE_THROWS_AS(multiply_helper(mat1, mat3), const std::invalid_argument &);
 
 	mat2.set_size(10, 16);
 	CHECK(mat2.size() == std::make_pair(10, 16));

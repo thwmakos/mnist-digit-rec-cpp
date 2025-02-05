@@ -18,8 +18,8 @@ namespace thwmakos {
 //
 // matrices are assumed to have
 // appropriate dimensions, should be from the caller of this function
-matrix multiply_avx512(const matrix &A, const matrix &B);
-matrix multiply_avx2(const matrix &A, const matrix &B);
+void multiply_avx512(matrix_span C, const_matrix_span A, const_matrix_span B);
+void multiply_avx2(matrix_span C, const_matrix_span A, const_matrix_span B);
 
 matrix &add_to_avx512(matrix &, const matrix &);
 

@@ -89,6 +89,14 @@ struct matrix2d_span
 	{
 		return data[row * num_columns + col];
 	}
+	
+	// calculate the index in the span data
+	// of the element (row, col) of the matrix
+	int index(int row, int col) const
+	{
+		return row * num_columns + col;
+	}
+
 };
 
 // immutable and mutable spans
@@ -415,13 +423,6 @@ class matrix2d
 			return m_data[n];
 		}
 		
-		// calculate the index in the vector m_data
-		// of the element (row, col) of the matrix
-		int index(int row, int col) const
-		{
-			return row * m_num_columns + col;
-		}
-
 		// iterators to matrix data
 		// access matrix entries sequentially, in row major order
 		auto begin() { return m_data.begin(); }
@@ -454,12 +455,13 @@ using matrix        = matrix2d<Dynamic, Dynamic>;
 using row_vector    = matrix2d<1, Dynamic>;
 using column_vector = matrix2d<Dynamic, 1>;
 
-// multiply two matrices
-matrix multiply(const matrix&, const matrix&);
+// multiply two matrices and write results in res
+void multiply(matrix_span product, const_matrix_span left, const_matrix_span right);
 // return transpose of a matrix
 matrix transpose(const matrix &);
 // simple non-SIMD matrix multiplication fallback
-matrix multiply_naive(const matrix &, const matrix &);
+// used in testing to compare against SIMD accelerated versions
+void multiply_naive(matrix_span product, const_matrix_span left, const_matrix_span right);
 // simple non-SIMD function to add the second operand to the first
 matrix &add_to(matrix &, const matrix &);
 
@@ -474,6 +476,8 @@ matrix &elementwise_multiply_inplace(matrix &left, const matrix &right);
 // first argument taken by value to allow move construction of temporaries
 // similarly to the addition/multiply by scalar operations
 matrix elementwise_multiply(matrix left, const matrix &right);
+
+void scalar_multiply(matrix_span mat, FloatType scalar);
 
 // apply func to every element of the matrix and return a new matrix
 // test concepts btw
@@ -515,14 +519,49 @@ matrix operator-(matrix left, const matrix &right);
 // they modify their argument instead of creating new matrix
 matrix &operator+=(matrix &left, const matrix &right);
 matrix &operator-=(matrix &left, const matrix &right);
-matrix &operator*=(matrix &left, FloatType scalar);
+
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> &operator*=(matrix2d<Rows, Columns> &left, FloatType scalar)
+{
+	scalar_multiply(left, scalar);
+
+	return left;
+}
 
 // matrix multiplication
-matrix operator*(const matrix &left, const matrix &right);
+template<int RowsLeft, int ColumnsLeft, int RowsRight, int ColumnsRight>
+	requires (ColumnsLeft == RowsRight)
+auto operator*(const matrix2d<RowsLeft, ColumnsLeft> &left, const matrix2d<RowsRight, ColumnsRight> &right)
+	-> matrix2d<RowsLeft, ColumnsRight>
+{
+	// make sure dimensions are matching (can happen if inner dimensions are dynamic)
+	if(left.num_cols() != right.num_rows())
+	{
+		throw std::invalid_argument(std::format("multiply: mismatching matrix dimensions ({}, {}) and ({}, {})",
+					left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
+	}
+
+	matrix2d<RowsLeft, ColumnsRight> product(left.num_rows(), right.num_cols());
+	
+	multiply(product, left, right);
+
+	return product;
+}
 
 // multiply a matrix by a scalar (element-wise)
-matrix operator*(FloatType scalar, matrix mat);
-matrix operator*(matrix mat, FloatType scalar);
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> operator*(FloatType scalar, matrix2d<Rows, Columns> mat)
+{
+	mat *= scalar;
+	return mat;
+}
+
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> operator*(matrix2d<Rows, Columns> mat, FloatType scalar)
+{
+	mat *= scalar;
+	return mat;
+}
 
 bool operator==(const matrix &, const matrix &);
 bool operator!=(const matrix &, const matrix &);

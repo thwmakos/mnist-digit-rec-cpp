@@ -14,58 +14,44 @@
 
 namespace thwmakos {
 
-matrix multiply_naive(const matrix &left, const matrix &right)
-{
-	// store these so we don't have to call num_rows() and num_cols()
-	// all the time, idk if this speeds up the functions, the above
-	// functions should be inlined anyway 
-	const auto [left_num_rows, left_num_cols]   = left.size();
-	const auto [right_num_rows, right_num_cols] = right.size();
-
-	matrix product(left_num_rows, right_num_cols);
 	
+void multiply_naive(matrix_span product, const_matrix_span left, const_matrix_span right)
+{	
 	// naive implementation of matrix multiplication
 	// TODO: good learning opportunity for intrinsics here
 	
 	// transpose right first to ensure sequential access 
 	// to matrix elements
 	// uses more memory but is ~4 times faster for large matrices
-	auto right_transpose = transpose(right);
+	//auto right_transpose = transpose(right);
 	
-	for(auto i = 0; i < left_num_rows; ++i)
+	for(auto i = 0; i < left.num_rows; ++i)
 	{
-		for(auto j = 0; j < right_num_cols; ++j)
+		for(auto j = 0; j < right.num_columns; ++j)
 		{
 			// equivalently we could check against right_num_rows
 			FloatType accumulator {}; 
 			
-			for(auto k = 0; k < left_num_cols; ++k)
+			for(auto k = 0; k < left.num_columns; ++k)
 			{
-				accumulator += left[i, k] * right_transpose[j, k];
+				accumulator += left[i, k] * right[k, j];
 			}
 
 			product[i, j] = accumulator; 
 		}
 	}
-
-	return product;
 }
 
-matrix multiply(const matrix &left, const matrix &right)
+void multiply(matrix_span product, const_matrix_span left, const_matrix_span right)
 {
-	// make sure dimensions are matching
-	if(left.num_cols() != right.num_rows())
-	{
-		throw std::invalid_argument(std::format("multiply: mismatching matrix dimensions ({}, {}) and ({}, {})",
-					left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
-	}
-	
+	// no need to check for dimensions, was already done in caller
+	// dispatch to appropriate implementation
 #ifdef __AVX512F__
-	return multiply_avx512(left, right);
+	multiply_avx512(product, left, right);
 #elifdef __AVX2__
-	return multiply_avx2(left, right);
+	multiply_avx2(product, left, right);
 #else
-	return multiply_naive(left, right);
+	multiply_naive(product, left, right);
 #endif
 }
 
@@ -310,37 +296,15 @@ matrix &operator-=(matrix &left, const matrix &right)
 	return left;
 }
 
-// matrix multiplication
-matrix operator*(const matrix &left, const matrix &right)
+void scalar_multiply(matrix_span mat, FloatType scalar)
 {
-	return multiply(left, right);
-}
-
-// scalar-matrix multiplication
-matrix &operator*=(matrix &mat, FloatType scalar)
-{
-	for(auto row = 0; row < mat.num_rows(); ++row)
+	for(auto row = 0; row < mat.num_rows; ++row)
 	{
-		for(auto col = 0; col < mat.num_cols(); ++col)
+		for(auto col = 0; col < mat.num_columns; ++col)
 		{
 			mat[row, col] *= scalar;
 		}
 	}
-
-	return mat;
 }
-
-matrix operator*(FloatType scalar, matrix mat)
-{
-	mat *= scalar;
-	return mat;
-}
-
-matrix operator*(matrix mat, FloatType scalar)
-{
-	mat *= scalar;
-	return mat;
-}
-
 
 } // namespace thwmakos

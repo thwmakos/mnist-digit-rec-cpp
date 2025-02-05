@@ -32,6 +32,21 @@ constexpr bool release_build = true;
 constexpr bool release_build = false;
 #endif
 
+template<typename MultiplyFunc>
+auto multiply_helper(const matrix &left, const matrix &right, MultiplyFunc func)
+{
+	if(left.num_cols() != right.num_rows())
+	{
+		throw std::invalid_argument("");
+	}
+
+	matrix prod(left.num_rows(), right.num_cols());
+	
+	func(prod, left, right);
+
+	return prod;
+}
+
 // fill a matrix with random values
 void randomise(matrix &mat)
 {
@@ -84,6 +99,19 @@ TEST_CASE("test AVX512 matrix multiplication")
 {
 	std::println("Release build: {}", release_build);
 
+	auto multiply_naive_helper = [] (const matrix &A, const matrix &B) 
+		{ 
+			return multiply_helper(A, B, thwmakos::multiply_naive);
+		};
+	auto multiply_avx512_helper = [] (const matrix &A, const matrix &B) 
+		{ 
+			return multiply_helper(A, B, thwmakos::multiply_avx512);
+		};
+	auto multiply_avx2_helper = [] (const matrix &A, const matrix &B) 
+		{ 
+			return multiply_helper(A, B, thwmakos::multiply_avx2);
+		};
+
 	// test unaligned sizes that use masked version of submatrix
 	for(int n : {1, 2, 3, 11, 17, 23, 31, 39})
 	{
@@ -97,12 +125,12 @@ TEST_CASE("test AVX512 matrix multiplication")
 				randomise(A);
 				randomise(B);
 
-				auto expected = multiply_naive(A, B);
+				auto expected = multiply_naive_helper(A, B);
 #ifdef __AVX512F__
-				CHECK_MESSAGE(expected == multiply_avx512(A, B), std::format("avx512: dimensions: {}, {}, {}", n, middle, m));
+				CHECK_MESSAGE(expected == multiply_avx512_helper(A, B), std::format("avx512: dimensions: {}, {}, {}", n, middle, m));
 #endif
 #ifdef __AVX2__
-				CHECK_MESSAGE(expected == multiply_avx2(A, B), std::format("avx2: dimensions: {}, {}, {}", n, middle, m));
+				CHECK_MESSAGE(expected == multiply_avx2_helper(A, B), std::format("avx2: dimensions: {}, {}, {}", n, middle, m));
 #endif
 			}
 		}
@@ -116,14 +144,14 @@ TEST_CASE("test AVX512 matrix multiplication")
 		randomise(A_large);
 		randomise(B_large);
 		auto t1 = std::chrono::high_resolution_clock::now();
-		matrix C1 = multiply_naive(A_large, B_large);
+		matrix C1 = multiply_naive_helper(A_large, B_large);
 		auto t2 = std::chrono::high_resolution_clock::now();
 #ifdef __AVX512F__
-		matrix C2 = multiply_avx512(A_large, B_large);
+		matrix C2 = multiply_avx512_helper(A_large, B_large);
 #endif
 		auto t3 = std::chrono::high_resolution_clock::now();
 #ifdef __AVX2__
-		matrix C3 = multiply_avx2(A_large, B_large);
+		matrix C3 = multiply_avx2_helper(A_large, B_large);
 #endif
 		auto t4 = std::chrono::high_resolution_clock::now();
 
