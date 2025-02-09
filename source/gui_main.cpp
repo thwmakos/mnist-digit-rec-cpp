@@ -165,13 +165,13 @@ class main_window : public QMainWindow
 			connect(quit_button, &QPushButton::clicked, qApp, &QApplication::quit);
 			layout->addWidget(quit_button);
 
-
 			layout->setSizeConstraint(QLayout::SetFixedSize);
 
 			setCentralWidget(central_widget);
 			setGeometry(100, 100, image_width * 20, image_height * 20);
 			setWindowTitle("mnist-digit-rec-cpp gui");
 			setFixedSize(sizeHint());
+			setWindowIcon(QIcon(QString("../data/icon.png")));
 		}
 
 		void evaluate_drawing()
