@@ -77,7 +77,7 @@ TEST_CASE("testing matrix class")
 	REQUIRE_THROWS_AS(multiply_helper(mat1, mat3), const std::invalid_argument &);
 
 	mat2.set_size(10, 16);
-	CHECK(mat2.size() == std::make_pair(10, 16));
+	CHECK(mat2.size() == std::tuple { 10, 16 });
 
 	matrix mat4;
 	CHECK(mat4.num_cols() == 0);
@@ -113,9 +113,9 @@ TEST_CASE("testing network class")
 
 	//std::cout << "biases[1] \n" << nwk.m_biases[1].size().first << ' ' << nwk.m_biases[1].size().second << '\n';
 		
-	CHECK(nwk.m_weights[0].size() == std::make_pair(30, 28 * 28));
-	CHECK(nwk.m_weights[1].size() == std::make_pair(10, 30));
-	CHECK(nwk.m_biases[0].size() == std::make_pair(30, 1));
+	CHECK(nwk.m_weights[0].size() == std::tuple { 30, 28 * 28 });
+	CHECK(nwk.m_weights[1].size() == std::tuple { 10, 30 });
+	CHECK(nwk.m_biases[0].size() == std::tuple { 30, 1 });
 	
 	//std::cout << nwk.m_biases[0] << '\n';
 
@@ -125,7 +125,7 @@ TEST_CASE("testing network class")
 	
 	auto result = nwk.evaluate(input_vector);
 
-	CHECK(result.size() == std::make_pair(10, 1));
+	CHECK(result.size() == std::tuple { 10, 1 });
 
 	//std::cout << result << '\n';
 }
