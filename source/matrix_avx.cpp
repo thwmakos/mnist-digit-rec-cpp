@@ -19,6 +19,9 @@
 
 namespace thwmakos { 
 
+// the functions only work with single precision floats
+static_assert(std::is_same_v<FloatType, float>);
+
 template<typename  T, int num_rows, int num_cols>
 using array2d = std::array<std::array<T, num_cols>, num_rows>;	
 
@@ -175,9 +178,6 @@ void submatrix_avx512(const_matrix_span A, const_matrix_span B, matrix_span C, i
 
 void multiply_avx512(matrix_span C, const_matrix_span A, const_matrix_span B)
 {
-	// the function only works with single precision floats
-	static_assert(std::is_same_v<FloatType, float>);
-
 	// we calculate the product C = A * B by computing
 	// C in smaller submatrices of dimensions given
 	// by the parameters below
@@ -219,19 +219,20 @@ void multiply_avx512(matrix_span C, const_matrix_span A, const_matrix_span B)
 // dimensions of dimensions are checked in caller
 // processes N * num_lanes elements every iteration
 template<int N>
-matrix &add_to_avx512_internal(matrix &left, const matrix &right)
+void add_to_avx512_internal(matrix_span left, const_matrix_span right, FloatType scalar)
 {
 	constexpr int num_lanes = 16;
 	
-	float       *left_data  = left.data().data();
-	const float *right_data = right.data().data();
+	float       *left_data  = left.data.data();
+	const float *right_data = right.data.data();
 	
-	const int num_elements = static_cast<int>(left.data().size()); 
+	const int num_elements = static_cast<int>(left.data.size()); 
 
 	int i = 0;
 
 	std::array<__m512, N> left_regs;
 	std::array<__m512, N> right_regs;
+	__m512 scalar_reg = _mm512_set1_ps(scalar);
 
 	for(; i + N * num_lanes < num_elements; i += N * num_lanes)
 	{
@@ -243,7 +244,7 @@ matrix &add_to_avx512_internal(matrix &left, const matrix &right)
 		
 		for(int j = 0; j < N; ++j)
 		{
-			left_regs[j] = _mm512_add_ps(left_regs[j], right_regs[j]);
+			left_regs[j] = _mm512_fmadd_ps(scalar_reg, right_regs[j], left_regs[j]);
 		}
 		
 		for(int j = 0; j < N; ++j)
@@ -259,7 +260,7 @@ matrix &add_to_avx512_internal(matrix &left, const matrix &right)
 		__m512 left_reg  = _mm512_loadu_ps(left_data + i);
 		__m512 right_reg = _mm512_loadu_ps(right_data + i); 
 
-		left_reg = _mm512_add_ps(left_reg, right_reg);
+		left_reg = _mm512_fmadd_ps(scalar_reg, right_reg, left_reg);
 
 		_mm512_storeu_ps(left_data + i, left_reg);
 	}
@@ -270,18 +271,17 @@ matrix &add_to_avx512_internal(matrix &left, const matrix &right)
 	__m512 left_reg  = _mm512_maskz_loadu_ps(mask, left_data + i);
 	__m512 right_reg = _mm512_maskz_loadu_ps(mask, right_data + i);
 
-	left_reg = _mm512_add_ps(left_reg, right_reg);
+	left_reg = _mm512_fmadd_ps(scalar_reg, right_reg, left_reg);
 
 	_mm512_mask_storeu_ps(left_data + i, mask, left_reg);
-
-	return left;
 }
 
-matrix &add_to_avx512(matrix &left, const matrix &right)
+// performs the operation left[i, j] += scalar * right[i, j]
+void add_to_avx512(matrix_span left, const_matrix_span right, FloatType scalar)
 {
 	// testing shows that changing 1 below to a different 
 	// value is not beneficial
-	return add_to_avx512_internal<1>(left, right);
+	return add_to_avx512_internal<1>(left, right, scalar);
 }
 
 

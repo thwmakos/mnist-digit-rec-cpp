@@ -89,7 +89,8 @@ TEST_CASE("test AVX512 add_to")
 #endif
 
 	m1 += m2;
-	CHECK(m1 == add_to(m1_copy, m2));
+	add_to(m1_copy, m2);
+	CHECK(m1 == m1_copy);
 #ifdef __AVX512F__
 	CHECK(m4 == m5);
 #endif
