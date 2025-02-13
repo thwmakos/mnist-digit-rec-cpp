@@ -22,6 +22,7 @@ void multiply_avx512(matrix_span C, const_matrix_span A, const_matrix_span B);
 void multiply_avx2(matrix_span C, const_matrix_span A, const_matrix_span B);
 
 void add_to_avx512(matrix_span left, const_matrix_span right, FloatType scalar = 1.0);
+void scalar_multiply_avx512(matrix_span mat, FloatType scalar);
 
 } // namespace thwmakos
 

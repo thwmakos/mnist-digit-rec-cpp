@@ -59,6 +59,9 @@ void multiply_naive(matrix_span product, const_matrix_span left, const_matrix_sp
 
 void scalar_multiply(matrix_span mat, FloatType scalar)
 {
+#ifdef AVX512F
+	scalar_multiply_avx512(mat, scalar);
+#else
 	for(auto row = 0; row < mat.num_rows; ++row)
 	{
 		for(auto col = 0; col < mat.num_columns; ++col)
@@ -66,6 +69,7 @@ void scalar_multiply(matrix_span mat, FloatType scalar)
 			mat[row, col] *= scalar;
 		}
 	}
+#endif
 }
 
 // TODO: this can be slow, need to make this cache friendly

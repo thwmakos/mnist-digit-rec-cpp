@@ -285,6 +285,31 @@ void add_to_avx512(matrix_span left, const_matrix_span right, FloatType scalar)
 }
 
 
+void scalar_multiply_avx512(matrix_span mat, FloatType scalar)
+{
+	constexpr int num_lanes = 16;
+
+	float *mat_data = mat.data.data();
+	const int num_elements = static_cast<int>(mat.data.size());
+
+	int i = 0;
+	
+	__m512 scalar_reg = _mm512_set1_ps(scalar);
+
+	for(; i + num_lanes < num_elements; i += num_lanes)
+	{
+		__m512 mat_reg = _mm512_loadu_ps(mat_data + i);
+		mat_reg = _mm512_mul_ps(mat_reg, scalar_reg);
+		_mm512_storeu_ps(mat_data + i, mat_reg);
+	}
+
+	// handle tail
+	__mmask16 mask = (1u << (num_elements - i)) - 1u;
+	__m512 mat_reg = _mm512_maskz_loadu_ps(mask, mat_data + i);
+	mat_reg = _mm512_mul_ps(mat_reg, scalar_reg);
+	_mm512_mask_storeu_ps(mat_data + i, mask, mat_reg);
+}
+
 #endif // __AVX512F__
 
 #ifdef __AVX2__ 
