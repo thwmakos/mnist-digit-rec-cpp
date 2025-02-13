@@ -37,6 +37,7 @@
 // 0 means background (white), 255 means foreground (black).
 
 #include <vector>
+#include <span>
 #include <string_view>
 #include <cstdint>
 
@@ -52,9 +53,9 @@ namespace thwmakos {
 // index can be from 0 up to num_samples() 	
 struct training_sample
 {
-	matrix image;
-	matrix label;
-	int    label_val;
+	column_vector image;
+	column_vector label;
+	int           label_val;
 };
 
 class data_loader
@@ -74,6 +75,9 @@ class data_loader
 		// is checked in the constructor
 		int num_samples() const { return m_num_images; }
 
+		std::span<const std::uint8_t> image_data() const { return m_image_data; }
+		std::span<const std::uint8_t> label_data() const { return m_label_data; }
+
 		//data_loader() : m_num_images(0), m_num_labels(0) {}
 		data_loader() = delete;
 		data_loader(const data_loader&) = delete;
@@ -83,7 +87,7 @@ class data_loader
 
 		~data_loader() = default;
 
-	//private:
+	private:
 		std::vector<std::uint8_t> m_image_data;
 		std::vector<std::uint8_t> m_label_data;	
 		

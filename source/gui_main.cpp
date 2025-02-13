@@ -56,7 +56,7 @@ class drawing_widget : public QWidget
 		
 		// return the drawn shape as a 28 * 28 matrix suitable for
 		// evaluation by the network
-		thwmakos::matrix get_drawing()
+		thwmakos::column_vector get_drawing()
 		{
 			std::vector<thwmakos::FloatType> pixels(28 * 28);
 			
@@ -71,7 +71,7 @@ class drawing_widget : public QWidget
 
 			std::transform(data, data + 28 * 28, pixels.begin(), [] (uchar pix) { return static_cast<thwmakos::FloatType>(pix) / 255.0f; });
 
-			return thwmakos::matrix(28 * 28, 1, std::move(pixels));
+			return thwmakos::column_vector(28 * 28, std::move(pixels));
 		}
 
 		void save_scaled_image()

@@ -153,11 +153,11 @@ training_sample data_loader::get_sample(int index) const
 	// the label and label_val members are set afterwards
 	// FIXME: there should not be any unnecessary copies or movies using the training_sample
 	// struct
-	training_sample sample = { matrix(s_image_size, 1, std::move(image_data)), 
-		matrix(10, 1), -1 };
+	training_sample sample = { column_vector(s_image_size, std::move(image_data)), 
+		column_vector(10), -1 };
 	// set the corresponding entry of label matrix (i.e. column vector) to one
 	sample.label_val = static_cast<int>(m_label_data.at(index));
-	sample.label[sample.label_val, 0] = 1.0f;
+	sample.label[sample.label_val] = 1.0f;
 
 	return sample;
 }

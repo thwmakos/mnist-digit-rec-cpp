@@ -25,7 +25,7 @@ FloatType sigmoid_derivative(FloatType x);
 
 // helper function to convert the output of the
 // network::evaluate function to an int, representing 
-int output_to_int(const matrix &output);
+int output_to_int(const column_vector &output);
 
 // forward declaration from data_loader.hpp
 struct training_sample;
@@ -46,7 +46,7 @@ class network
 		// evaluate the network
 		// takes a column vector whose length must match the length of the input layer
 		// returns a vector representing the activation of the final layer
-		matrix evaluate(const matrix& input) const;
+		column_vector evaluate(const column_vector &input) const;
 
 		// train the model using mnist data
 		// internally uses the data_loader class
@@ -66,14 +66,14 @@ class network
 		{
 			// FIXME: should I store a reference to layer structure here?
 			std::vector<matrix> weights;
-			std::vector<matrix> biases;
+			std::vector<column_vector> biases;
 			
 			// construct a gradient by properly resizing the
 			// weights and biases matrices given as input 
 			// the layers of the network
 			explicit gradient(std::span<const int> network_layers) : 
 				weights(network_layers.size() - 1), 
-				biases(network_layers.size() - 1) 
+				biases(network_layers.size() - 1)
 			{
 				resize_matrices(network_layers);
 			}
@@ -100,7 +100,7 @@ class network
 						[layers_it = layers.begin()] (auto &b) mutable
 						{
 							const int num_rows = *(layers_it + 1);
-							b.set_size(num_rows, 1);
+							b.set_size(num_rows);
 							++layers_it;
 						});
 			}
@@ -126,7 +126,7 @@ class network
 		
 		// column vectors for biases
 		// first layer neurons do not have biases
-		std::vector<matrix> m_biases;	
+		std::vector<column_vector> m_biases;	
 
 };
 

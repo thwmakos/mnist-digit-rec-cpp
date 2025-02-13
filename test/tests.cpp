@@ -18,7 +18,11 @@
 #include "../source/data_loader.hpp"
 
 using thwmakos::FloatType;
+
 using thwmakos::matrix;
+using thwmakos::row_vector;
+using thwmakos::column_vector;
+
 using thwmakos::network;
 using thwmakos::data_loader;
 
@@ -99,11 +103,11 @@ TEST_CASE("testing matrix class")
 	CHECK(mat6 == mat5);
 
 	matrix mat7 {{1.0f, 2.0f, 3.0f, 4.0f}, {5.0f, 6.0f, 7.0f, 8.0f}, {9.0f, 10.0f, 11.0f, 12.0f}};
-	matrix col1 {{1.0f}, {2.0f}, {3.0f}};
+	column_vector col1 {1.0f, 2.0f, 3.0f};
 
 	CHECK(add_column(mat7, col1) == matrix {{2.0f, 3.0f, 4.0f, 5.0f}, {7.0f, 8.0f, 9.0f, 10.0f}, {12.0f, 13.0f, 14.0f, 15.0f}});
 
-	CHECK(get_column(mat7, 1) == matrix {{2.0f}, {6.0f}, {10.0f}});
+	CHECK(get_column(mat7, 1) == column_vector {2.0f, 6.0f, 10.0f});
 	REQUIRE_THROWS(get_column(mat7, 4));
 }
 
@@ -119,7 +123,7 @@ TEST_CASE("testing network class")
 	
 	//std::cout << nwk.m_biases[0] << '\n';
 
-	matrix input_vector(28 * 28, 1);
+	column_vector input_vector(28 * 28);
 
 	REQUIRE_NOTHROW(nwk.evaluate(input_vector));
 	
@@ -147,17 +151,17 @@ TEST_CASE("testing data_loader")
 {
 	data_loader loader("../data/train-images-idx3-ubyte", "../data/train-labels-idx1-ubyte");
 
-	CHECK(loader.m_num_images == 60000);
+	CHECK(loader.num_samples() == 60000);
 
-	std::println("training image data size: {}KiB\n", static_cast<float> (loader.m_image_data.size() / 1024.0f));
-	std::println("training label data size: {}KiB\n", static_cast<float> (loader.m_label_data.size() / 1024.0f));
+	std::println("training image data size: {}KiB\n", static_cast<float> (loader.image_data().size() / 1024.0f));
+	std::println("training label data size: {}KiB\n", static_cast<float> (loader.label_data().size() / 1024.0f));
 
 	int label_index = 2001;
-	std::println("loader.m_label_data[{}] = {}", label_index, loader.m_label_data.at(label_index));
+	std::println("loader.m_label_data[{}] = {}", label_index, loader.label_data()[label_index]);
 
 	auto sample = loader.get_sample(label_index);
-	CHECK(sample.label[loader.m_label_data[label_index], 0] == 1.0f);
-	CHECK(sample.label_val == loader.m_label_data[label_index]);
+	CHECK(sample.label[loader.label_data()[label_index], 0] == 1.0f);
+	CHECK(sample.label_val == loader.label_data()[label_index]);
 
 }
 
@@ -172,11 +176,10 @@ TEST_CASE("testing network training")
 	// test if dimensions check in backpropagation()
 	// using a dummy sample	
 	network::gradient grad { network_layer_size };
-	thwmakos::training_sample sample;
-	sample.image = matrix(28 * 28, 1);
-	sample.label = matrix(10, 1);
+	auto input = matrix(28 * 28, 1);
+	auto expected = matrix(10, 1);
 
-	REQUIRE_NOTHROW(grad = nwk.backpropagation(sample.image, sample.label));
+	REQUIRE_NOTHROW(grad = nwk.backpropagation(input, expected));
 	
 	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());
 	CHECK(grad.weights[0].num_rows() == nwk.m_weights[0].num_rows());

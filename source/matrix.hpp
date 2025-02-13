@@ -68,6 +68,9 @@ concept is_dynamic_vector = (is_dynamic<Rows, Columns> && is_vector<Rows, Column
 template<int Rows, int Columns>
 concept is_fixed = (Rows != Dynamic && Columns != Dynamic);
 
+// TODO: decide if e.g. a matrix2d<Dynamic, Dynamic> with dimensions
+// (n, m) should be treated as a matrix2d<n, m>. At the they are different
+
 // a 2d-matrix view into a continuous extend of FloatType values
 // non-owning and non-templated, to be used with functions 
 // performing matrix operations
@@ -146,6 +149,8 @@ class matrix2d
 				throw std::invalid_argument("number of rows and columns has to be strictly positive");
 			}
 
+			// TODO: check for mismatches between Rows and num_rows and Columns and num_columns
+
 			m_data.resize(m_num_rows * m_num_columns);
 		}
 		
@@ -169,8 +174,7 @@ class matrix2d
 
 	public:
 		// construct new matrix with given number of rows and columns
-		explicit matrix2d(int num_rows, int num_columns) 
-			requires is_both_dynamic<Rows, Columns> : 
+		explicit matrix2d(int num_rows, int num_columns) :
 			matrix2d(num_rows, num_columns, private_constructor_tag {})
 		{}
 		
@@ -182,7 +186,7 @@ class matrix2d
 
 		explicit matrix2d(int length)
 			requires is_dynamic_vector<Rows, Columns> :
-			matrix2d(Rows == 1 ? 1 : length, Columns == 1 ? length : 1, private_constructor_tag {})
+			matrix2d(Rows == 1 ? 1 : length, Columns == 1 ? 1 : length, private_constructor_tag {})
 		{}
 		
 		// construct a matrix from raw data, moving data argument into m_data
@@ -193,7 +197,7 @@ class matrix2d
 
 		explicit matrix2d(int length, std::vector<FloatType> data)
 			requires is_dynamic_vector<Rows, Columns> :
-			matrix2d(Rows == 1 ? 1 : length, Columns == 1 ? length : 1, std::move(data), private_constructor_tag {})
+			matrix2d(Rows == 1 ? 1 : length, Columns == 1 ? 1 : length, std::move(data), private_constructor_tag {})
 		{}	
 		
 		// construct a matrix with given data
@@ -229,10 +233,9 @@ class matrix2d
 
 		matrix2d(std::initializer_list<FloatType> init_data)
 			requires is_dynamic_vector<Rows, Columns> :
-			m_num_rows(Rows == 1 ? 1 : static_cast<int>(init_data.size()), 
-					Columns == 1 ? static_cast<int>(init_data.size()) : 1, 
-					std::move(init_data), 
-					private_constructor_tag {})
+			m_num_rows(Rows == 1 ? 1 : static_cast<int>(init_data.size())), 
+			m_num_columns(Columns == 1 ? 1 : static_cast<int>(init_data.size())), 
+			m_data(init_data)
 		{}
 		
 		// constructors, destructor, assignment operators are sufficient, 
@@ -297,6 +300,22 @@ class matrix2d
 			set_size(std::get<0>(new_size), std::get<1>(new_size));
 		}
 
+		void set_size(int new_length)
+			requires is_dynamic_vector<Rows, Columns>
+		{
+			if constexpr (Rows == 1)
+			{
+				m_num_columns = new_length;
+			}
+			else
+			{
+				m_num_rows = new_length;
+			}
+
+			// TODO: add checks for negative numbers here
+			m_data.resize(new_length, FloatType {});
+		}
+
 		// reinterpret the size of the matrix while keeping its data
 		// the total amount of elements before and after has to be the same
 		// main use it to convert a column vector to a row vector 
@@ -316,6 +335,31 @@ class matrix2d
 
 			return *this;
 		}	
+		
+		// switch between column and row vectors
+		matrix2d<Dynamic, 1> to_column() const &
+			requires is_row_vector<Rows, Columns>
+		{
+			return matrix2d<Dynamic, 1>(m_num_columns, m_data);
+		}
+		
+		matrix2d<Dynamic, 1> to_column() &&
+			requires is_row_vector<Rows, Columns>
+		{
+			return matrix2d<Dynamic, 1>(m_num_columns, std::move(m_data));
+		}
+		
+		matrix2d<1, Dynamic> to_row() const &
+			requires is_column_vector<Rows, Columns>
+		{
+			return matrix2d<1, Rows>(m_num_rows, m_data);
+		}
+		
+		matrix2d<1, Dynamic> to_row() &&
+			requires is_column_vector<Rows, Columns>
+		{
+			return matrix2d<1, Dynamic>(m_num_rows, std::move(m_data));
+		}
 
 		// get number of rows of the matrix
 		int num_rows() const { return m_num_rows; }
@@ -455,6 +499,13 @@ class matrix2d
 		std::vector<FloatType> m_data;
 };
 
+// TODO: inconsistent naming, think about this
+template<int N>
+using row_matrix = matrix2d<1, N>;
+
+template<int N>
+using column_matrix = matrix2d<N, 1>;
+
 using matrix        = matrix2d<Dynamic, Dynamic>;
 using row_vector    = matrix2d<1, Dynamic>;
 using column_vector = matrix2d<Dynamic, 1>;
@@ -485,7 +536,15 @@ void add_to(matrix_span left, const_matrix_span right, FloatType scalar = 1.0);
 
 // multiply each element of left by right,
 // left[i, j] *= right[i, j]
-void elementwise_multiply(matrix_span left, const_matrix_span right);
+void elementwise_multiply_by(matrix_span left, const_matrix_span right);
+
+// add column to each column of mat, column has to have num_rows == 1, or
+// num_columns == 1 (so it has to be a span to a vector, either row or column)
+// this should be checked by the caller
+void add_column_to(matrix_span mat, const_matrix_span column);
+
+// check equality
+bool is_equal(const_matrix_span left, const_matrix_span right);
 
 //
 // Operations on matrix2d arguments, these do dimensions checks
@@ -604,49 +663,110 @@ matrix2d<Columns, Rows> transpose(const matrix2d<Rows, Columns> &mat)
 // left[i, j] *= right[i, j]
 // modifies left argument
 // matrices must have the same dimensions
-matrix &elementwise_multiply_inplace(matrix &left, const matrix &right);
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> &elementwise_multiply_inplace(matrix2d<Rows, Columns> &left, const matrix2d<Rows, Columns> &right)
+{
+	if(left.size() != right.size())
+	{
+		throw std::invalid_argument(std::format("elementwise_multiply_inplace: mismatched dimensions ({}, {}) and ({}, {})",
+				left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
+	}	
+
+	elementwise_multiply_by(left, right);
+
+	return left;
+}
+
+// add the column to each column of mat, modifying mat
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> &add_column_inplace(matrix2d<Rows, Columns> &mat, const column_matrix<Rows> &column)
+{
+	if(mat.num_rows() != column.length())
+	{
+		throw std::invalid_argument(std::format("Column vector has {} elements, expected {}",
+				column.length(), mat.num_rows()));
+	}
+
+	add_column_to(mat, column);
+
+	return mat;
+}
+
+// add column to each column of mat returning a new matrix
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> add_column(matrix2d<Rows, Columns> mat, const matrix2d<Rows, 1> &column)
+{
+	add_column_inplace(mat, column);
+	return mat;
+}
+// extract the column of mat indicated by index
+template<int Rows, int Columns>
+column_matrix<Rows> get_column(const matrix2d<Rows, Columns> &mat, int index)
+{
+	if(index < 0 || index >= mat.num_cols())
+	{
+		throw std::invalid_argument(std::format("get_column: requested column {} but matrix has {} columns",
+					index, mat.num_cols()));
+	}
+
+	column_matrix<Rows> column(mat.num_rows());
+
+	for(auto i = 0; i < mat.num_rows(); ++i)
+	{
+		column[i] = mat[i, index];
+	}	
+
+	return column;	
+}
 
 // multiply two matrices element wise, that is c_{ij} = a_{ij} * b_{ij}
 // and return a *new* matrix 
 // first argument taken by value to allow move construction of temporaries
 // similarly to the addition/multiply by scalar operations
-matrix elementwise_multiply(matrix left, const matrix &right);
-
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> elementwise_multiply(matrix2d<Rows, Columns> left, const matrix2d<Rows, Columns> &right)
+{
+	elementwise_multiply_by(left, right);
+	return left;
+}
 
 // apply func to every element of the matrix and return a new matrix
 // test concepts btw
-// TODO: add tests for this function -- DONE
-// TODO: parallelise this use <execution>
-matrix elementwise_apply(const matrix &mat, std::regular_invocable<FloatType> auto func)
+// TODO: probably not worth parallelising this using <execution>
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> elementwise_apply(const matrix2d<Rows, Columns> &mat, std::regular_invocable<FloatType> auto func)
 {
 	const auto [num_rows, num_cols] = mat.size();
-	matrix result(num_rows, num_cols);
+	matrix2d<Rows, Columns> result(num_rows, num_cols);
 	
 	std::transform(mat.cbegin(), mat.cend(), result.begin(), func);
 
 	return result;
 }
 
-// add the column to each column of mat, modifying mat
-matrix &add_column_inplace(matrix &mat, const matrix &column);
-// add column to each column of mat returning a new matrix
-matrix add_column(matrix mat, const matrix &column);
-
-// extract the column of mat indicated by index
-matrix get_column(const matrix &mat, int index);
-
-// operator overloads
-
 // unary plus, returns its argument
 matrix operator+(const matrix &);
 // unary minus, negates every element
 matrix operator-(const matrix &mat);
 
+template<int Rows, int Columns>
+bool operator==(const matrix2d<Rows, Columns> &left, const matrix2d<Rows, Columns> &right)
+{
+	return is_equal(left, right);
+}
 
-bool operator==(const matrix &, const matrix &);
-bool operator!=(const matrix &, const matrix &);
+template<int Rows, int Columns>
+bool operator!=(const matrix2d<Rows, Columns> &left, const matrix2d<Rows, Columns> &right)
+{
+	return !is_equal(left, right);
+}
 
-std::ostream & operator<<(std::ostream&, const matrix&);
+template<int Rows, int Columns>
+std::ostream &operator<<(std::ostream &os, const matrix2d<Rows, Columns> &mat)
+{
+	os << std::format("{:.3}", mat);
+	return os;
+}
 
 } // namespace thwmakos
 
@@ -697,6 +817,5 @@ struct std::formatter<thwmakos::matrix2d<Rows, Columns>, CharT>
 		return out;
 	}
 };
-
 
 #endif // MATRIX_HPP_INCLUDED

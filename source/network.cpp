@@ -91,13 +91,8 @@ FloatType sigmoid_derivative(FloatType x)
 	return exp_minus_x / ((one + exp_minus_x) * (one + exp_minus_x));
 }
 
-int output_to_int(const matrix &output)
+int output_to_int(const column_vector &output)
 {
-	if(output.num_rows() != 1 && output.num_cols() != 1)
-	{
-		throw std::invalid_argument("not a column or row vector");
-	}
-
 	return std::distance(output.cbegin(), std::max_element(output.cbegin(), output.cend()));
 }
 
@@ -142,7 +137,7 @@ network::network(std::span<const int> network_layers) :
 			[layers_it = m_layers.begin()] (auto &b) mutable
 			{
 				const int num_rows = *(layers_it + 1);
-				b.set_size(num_rows, 1);
+				b.set_size(num_rows);
 				++layers_it;
 			});
 	
@@ -179,12 +174,11 @@ network::network(std::span<const int> network_layers) :
 	randomise(m_biases);
 }
 
-matrix network::evaluate(const matrix &input) const
+column_vector network::evaluate(const column_vector &input) const
 {
 	// check if input size is correct
 	// has to be equal to the number of input layers
-	if(input.num_rows() != m_weights[0].num_cols() ||
-		input.num_cols() != 1)
+	if(input.num_rows() != m_weights[0].num_cols())	
 	{
 		throw std::invalid_argument("expected column vector with length of input layer"); 
 	}
@@ -193,7 +187,7 @@ matrix network::evaluate(const matrix &input) const
 	//result = elementwise_apply(m_weights[0] * input  - m_biases[0], sigmoid);
 	//result = elementwise_apply(m_weights[1] * result - m_biases[1], sigmoid);
 
-	matrix result = input;	
+	auto result = input;	
 
 	for(int i = 0; i < static_cast<int>(m_weights.size()); ++i)
 	{
@@ -294,7 +288,7 @@ network::gradient network::backpropagation(const matrix &inputs, const matrix &e
 	{
 		auto delta_column = get_column(delta, j);
 		// using the reshape member here and below to avoid extra allocation
-		total_gradient.weights[num_layers - 2] += (1.0 / num_samples) * delta_column * get_column(activations[num_layers - 2], j).reshape(1, activations[num_layers - 2].num_rows()); 	
+		total_gradient.weights[num_layers - 2] += (1.0 / num_samples) * delta_column * get_column(activations[num_layers - 2], j).to_row(); 	
 		total_gradient.biases[num_layers - 2]  += (1.0 / num_samples) * delta_column;
 	}
 	
@@ -310,7 +304,7 @@ network::gradient network::backpropagation(const matrix &inputs, const matrix &e
 			// \pdv{C}{b^l} = δ^l
 			// \pdv{C}{w^l_{jk} = a^{l-1}_k δ^l_j
 			auto delta_column = get_column(delta, j);
-			total_gradient.weights[i] += (1.0 / num_samples) * delta_column * get_column(activations[i], j).reshape(1, activations[i].num_rows());
+			total_gradient.weights[i] += (1.0 / num_samples) * delta_column * get_column(activations[i], j).to_row();
 			total_gradient.biases[i]  += (1.0 / num_samples) * delta_column;
 		}
 	}

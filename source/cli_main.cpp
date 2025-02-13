@@ -23,7 +23,7 @@ int main()
 	// calculate accuracy
 	int correct_evals = 0;
 
-	for(int i = 0; i < loader.m_num_images; ++i)
+	for(int i = 0; i < loader.num_samples(); ++i)
 	{
 		auto sample = loader.get_sample(i);
 		auto eval   = nwk.evaluate(sample.image);
@@ -34,8 +34,8 @@ int main()
 		}
 	}
 	
-	auto accuracy = static_cast<float>(correct_evals) / static_cast<float>(loader.m_num_images);
-	std::println("Got {} out of {} correctly, accuracy is {} %", correct_evals, loader.m_num_images, 100.0f * accuracy);
+	auto accuracy = static_cast<float>(correct_evals) / static_cast<float>(loader.num_samples());
+	std::println("Got {} out of {} correctly, accuracy is {} %", correct_evals, loader.num_samples(), 100.0f * accuracy);
 
 	// proceed to interactive mode to investigate raw output of specific samples
 	while(true)
@@ -46,7 +46,7 @@ int main()
 
 		std::cin >> sample_index;
 	
-		if(!std::cin || sample_index < 0 || sample_index >= loader.m_num_images)
+		if(!std::cin || sample_index < 0 || sample_index >= loader.num_samples())
 		{
 			if(sample_index == -1)
 			{

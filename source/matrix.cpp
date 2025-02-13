@@ -102,7 +102,7 @@ void add_to(matrix_span left, const_matrix_span right, FloatType scalar)
 
 // multiply each element of left by right,
 // left[i, j] *= right[i, j]
-void elementwise_multiply(matrix_span left, const_matrix_span right)
+void elementwise_multiply_by(matrix_span left, const_matrix_span right)
 {
 	const auto [num_rows, num_cols] = left.size();
 	
@@ -115,57 +115,16 @@ void elementwise_multiply(matrix_span left, const_matrix_span right)
 	}
 }
 
-
-matrix &elementwise_multiply_inplace(matrix &left, const matrix &right)
+void add_column_to(matrix_span mat, const_matrix_span column)
 {
-	if(left.size() != right.size())
+	for(auto i = 0; i < mat.num_rows; ++i)
 	{
-		throw std::invalid_argument(std::format("elementwise_multiply_inplace: mismatched dimensions ({}, {}) and ({}, {})",
-				left.num_rows(), left.num_cols(), right.num_rows(), right.num_cols()));
-	}	
-	
-	const auto [num_rows, num_cols] = left.size();
-	
-	for(auto i = 0; i < num_rows; ++i)
-	{
-		for(auto j = 0; j < num_cols; ++j)
+		for(auto j = 0; j < mat.num_columns; ++j)
 		{
-			left[i, j] *= right[i, j];
+			// FIXME: This should be += but -= gives stable and accurate results????
+			mat[i, j] -= column.data[i];
 		}
 	}
-
-	return left;
-}
-
-matrix elementwise_multiply(matrix left, const matrix &right)
-{
-	elementwise_multiply_inplace(left, right);
-	return left;
-}
-
-matrix &add_column_inplace(matrix &mat, const matrix &column)
-{
-	if(column.num_cols() != 1 || mat.num_rows() != column.num_rows())
-	{
-		throw std::invalid_argument(std::format("add_column_inplace: mismatched dimensions ({}, {}) and ({}, {})",
-				mat.num_rows(), mat.num_cols(), column.num_rows(), column.num_cols()));	
-	}
-	
-	for(auto i = 0; i < mat.num_rows(); ++i)
-	{
-		for(auto j = 0; j < mat.num_cols(); ++j)
-		{
-			mat[i, j] -= column[i, 0];
-		}
-	}
-
-	return mat;
-}
-
-matrix add_column(matrix mat, const matrix &column)
-{
-	add_column_inplace(mat, column);
-	return mat;
 }
 
 matrix get_column(const matrix &mat, int index)
@@ -186,45 +145,19 @@ matrix get_column(const matrix &mat, int index)
 	return column;
 }
 
-std::ostream &operator<<(std::ostream &os, const matrix& mat)
-{
-	// begin with [
-	os << "[ ";
-
-	for(auto row = 0; row < mat.num_rows(); ++row)
-	{
-		// for alignment print two spaces
-		if(row > 0)
-			os << ' ' << ' ';
-
-		for(auto col = 0; col < mat.num_cols(); ++col)
-		{
-			os << mat[row, col] << ' ';
-		}
-		
-		// if last row print ] instead of changing line
-		if(row < mat.num_rows() - 1)
-			os << '\n';
-		else
-			os << ']';
-	}
-
-	return os;
-}
-
-bool operator==(const matrix &left, const matrix &right)
+bool is_equal(const_matrix_span left, const_matrix_span right)
 {
 	constexpr FloatType eps = 1.0e-3;
 
-	if(left.num_rows() != right.num_rows() ||
-	   left.num_cols() != right.num_cols())
+	if(left.num_rows != right.num_rows ||
+	   left.num_columns != right.num_columns)
 	{
 		return false;
 	}
 
-	for(auto row = 0; row < left.num_rows(); ++row)	
+	for(int row = 0; row < left.num_rows; ++row)	
 	{
-		for(auto col = 0; col < left.num_cols(); ++col)
+		for(int col = 0; col < left.num_columns; ++col)
 		{
 			// if two elements are equal
 			// TODO: there are better way to check float equality
@@ -238,11 +171,6 @@ bool operator==(const matrix &left, const matrix &right)
 	}
 
 	return true;
-}
-
-bool operator!=(const matrix &left, const matrix &right)
-{
-	return !(left == right);
 }
 
 matrix operator+(const matrix &mat)
