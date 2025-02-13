@@ -127,24 +127,6 @@ void add_column_to(matrix_span mat, const_matrix_span column)
 	}
 }
 
-matrix get_column(const matrix &mat, int index)
-{
-	if(index < 0 || index >= mat.num_cols())
-	{
-		throw std::invalid_argument(std::format("get_column: requested column {} but matrix has {} columns",
-					index, mat.num_cols()));
-	}
-
-	matrix column(mat.num_rows(), 1);
-
-	for(int i = 0; i < mat.num_rows(); ++i)
-	{
-		column[i, 0] = mat[i, index];
-	}
-
-	return column;
-}
-
 bool is_equal(const_matrix_span left, const_matrix_span right)
 {
 	constexpr FloatType eps = 1.0e-3;

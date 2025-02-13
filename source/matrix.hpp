@@ -699,6 +699,7 @@ matrix2d<Rows, Columns> add_column(matrix2d<Rows, Columns> mat, const matrix2d<R
 	add_column_inplace(mat, column);
 	return mat;
 }
+
 // extract the column of mat indicated by index
 template<int Rows, int Columns>
 column_matrix<Rows> get_column(const matrix2d<Rows, Columns> &mat, int index)
@@ -744,11 +745,6 @@ matrix2d<Rows, Columns> elementwise_apply(const matrix2d<Rows, Columns> &mat, st
 	return result;
 }
 
-// unary plus, returns its argument
-matrix operator+(const matrix &);
-// unary minus, negates every element
-matrix operator-(const matrix &mat);
-
 template<int Rows, int Columns>
 bool operator==(const matrix2d<Rows, Columns> &left, const matrix2d<Rows, Columns> &right)
 {
@@ -759,6 +755,22 @@ template<int Rows, int Columns>
 bool operator!=(const matrix2d<Rows, Columns> &left, const matrix2d<Rows, Columns> &right)
 {
 	return !is_equal(left, right);
+}
+
+// unary plus, returns its argument
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> operator+(const matrix2d<Rows, Columns> &mat)
+{
+	return mat;
+}
+
+// unary minus, negates every element
+// take mat by value to allow move construction when temporaries are
+// passed as argument
+template<int Rows, int Columns>
+matrix2d<Rows, Columns> operator-(matrix2d<Rows, Columns> mat)
+{
+	return -1.0 * mat;
 }
 
 template<int Rows, int Columns>
