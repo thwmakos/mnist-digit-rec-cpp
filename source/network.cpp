@@ -28,34 +28,6 @@
 
 namespace thwmakos {
 
-// debug helper
-FloatType weight_max(const network::gradient &grad)
-{
-	if constexpr (g_debug)
-	{
-
-		auto wmax = *std::max_element(grad.weights[0].cbegin(), grad.weights[0].cend());
-
-		for(auto i = 1; i < static_cast<int>(grad.weights.size()); ++i)
-		{
-			auto temp = std::max_element(grad.weights[i].cbegin(), grad.weights[i].cend());
-
-			if(wmax < *temp)
-			{
-				wmax = *temp;
-			}
-		}
-
-		return wmax;
-	}
-	// if not in debug build reduce the function to no op
-	else
-	{
-		return FloatType {};
-	}
-}
-
-
 // calculates the function 1 / (1 + e^{-x})
 // TODO: add test for this function 
 FloatType sigmoid(FloatType x)
