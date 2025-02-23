@@ -143,7 +143,11 @@ class main_window : public QMainWindow
 
 			m_eval_label = new QLabel("Draw a number", this);
 			m_eval_label->setAlignment(Qt::AlignCenter);
-			layout->QLayout::addWidget(m_eval_label);
+			layout->addWidget(m_eval_label);
+
+			m_raw_eval_label = new QLabel("Raw network evaluation", this); 
+			m_raw_eval_label->setAlignment(Qt::AlignCenter);
+			layout->addWidget(m_raw_eval_label);
 
 			m_eval_button = new QPushButton("Evaluate drawing", this);
 			connect(m_eval_button, &QPushButton::clicked, this, &main_window::evaluate_drawing);
@@ -182,6 +186,15 @@ class main_window : public QMainWindow
 			auto text = std::format("The number you drew is <b>{}</b>", thwmakos::output_to_int(eval));
 
 			m_eval_label->setText(QString::fromStdString(text));
+
+			std::string raw_eval_text {};
+			
+			for(int i = 0; i < eval.length(); ++i)
+			{
+				raw_eval_text += std::format("<b>{}</b>: {:.2} ", i, eval[i]); 
+			}
+
+			m_raw_eval_label->setText(QString::fromStdString(raw_eval_text));
 		}
 
 		void dispatch_training()
@@ -206,6 +219,7 @@ class main_window : public QMainWindow
 	private:
 		drawing_widget *m_drawing_widget = nullptr;
 		QLabel         *m_eval_label     = nullptr;
+		QLabel         *m_raw_eval_label = nullptr;
 		QPushButton    *m_eval_button    = nullptr;
 		QPushButton    *m_train_button   = nullptr;
 
