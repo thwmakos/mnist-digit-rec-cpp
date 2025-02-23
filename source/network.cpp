@@ -169,7 +169,7 @@ column_vector network::evaluate(const column_vector &input) const
 	return result;
 }
 
-void network::train(int epochs, int batch_size, FloatType learning_rate)
+void network::train(int epochs, int batch_size, FloatType learning_rate, FloatType regularisation_param)
 {
 	constexpr auto images = "../data/train-images-idx3-ubyte";
 	constexpr auto labels = "../data/train-labels-idx1-ubyte";
@@ -198,7 +198,8 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 	std::random_device rd {};
 	std::default_random_engine eng { rd() };
 	
-	std::println("Started training for {} epochs, with batch size of {} and learning rate {}", epochs, batch_size, learning_rate);	
+	std::println("Started training for {} epochs, with batch size of {}, learning rate {} and L2 regularisation with parameter {}", 
+			epochs, batch_size, learning_rate, regularisation_param);	
 
 	for(auto epoch = 0; epoch < epochs; ++epoch)
 	{
@@ -208,7 +209,7 @@ void network::train(int epochs, int batch_size, FloatType learning_rate)
 		// FIXME: do I need to check if batch_size does not divide num_samples -- NO
 		for(auto indices_it = indices.cbegin(); indices.cend() - indices_it >= batch_size; indices_it += batch_size)
 		{
-			sgd(dl, std::span<const int> {indices_it, indices_it + batch_size}, learning_rate);
+			sgd(dl, std::span<const int> {indices_it, indices_it + batch_size}, learning_rate, regularisation_param);
 		}
 		
 		auto t2 = std::chrono::high_resolution_clock::now();
@@ -284,7 +285,7 @@ network::gradient network::backpropagation(const matrix &inputs, const matrix &e
 	return total_gradient;
 }
 
-void network::sgd(const data_loader &dl, std::span<const int> sample_indices, FloatType learning_rate)
+void network::sgd(const data_loader &dl, std::span<const int> sample_indices, FloatType learning_rate, FloatType regularisation_param)
 {
 	const int num_samples = static_cast<int>(sample_indices.size());
 
@@ -321,8 +322,18 @@ void network::sgd(const data_loader &dl, std::span<const int> sample_indices, Fl
 	// update m_weights and m_biases (stochastic gradient descent step)
 	for(int i = 0; i < static_cast<int>(m_layers.size() - 1); ++i)
 	{
-		m_weights[i] -= learning_rate * total_gradient.weights[i];
-		m_biases[i]  -= learning_rate * total_gradient.biases[i];
+		// update weights using L2 regularisation
+		m_weights[i] *= (1.0 - learning_rate * regularisation_param / dl.num_samples());
+		total_gradient.weights[i] *= learning_rate;
+		m_weights[i] -= total_gradient.weights[i];
+		// effectively we do this but using compound operators saves creation of temporaries and
+		// allocations
+		//m_weights[i] = (1.0 - learning_rate * regularisation_param / dl.num_samples()) * m_weights[i] - learning_rate * total_gradient.weights[i];
+		
+		total_gradient.biases[i] *= learning_rate;
+		m_biases[i] -= total_gradient.biases[i];
+		//m_biases[i] -= learning_rate * total_gradient.biases[i];
+		
 	}
 }
 

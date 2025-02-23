@@ -53,7 +53,7 @@ class network
 
 		// each using batch_size number of variables, at each step moving
 		// by 'learning_rate' towards the direction of steepest descent
-		void train(int epochs, int batch_size, FloatType learning_rate);
+		void train(int epochs, int batch_size, FloatType learning_rate, FloatType regularisation_param);
 
 	//private:
 	
@@ -108,7 +108,7 @@ class network
 
 		// stochastic gradient descent
 		// minimise cost function based on the arguments	
-		void sgd(const data_loader &dl, std::span<const int> sample_indices, FloatType learning_rate);
+		void sgd(const data_loader &dl, std::span<const int> sample_indices, FloatType learning_rate, FloatType regularisation_param);
 
 		// calculate partial derivates with respect to 
 		// weights and biases for a matrix of training samples, where 

@@ -190,7 +190,7 @@ class main_window : public QMainWindow
 			m_eval_button->setDisabled(true);
 			m_train_button->setDisabled(true);
 
-			m_training_thread.reset(QThread::create([this] { nwk.train(15, 100, 3.0); }));
+			m_training_thread.reset(QThread::create([this] { nwk.train(30, 100, 3.0f, 10.0f); }));
 			
 			connect(m_training_thread.get(), &QThread::finished, 
 					[this] 
