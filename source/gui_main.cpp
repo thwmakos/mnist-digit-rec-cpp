@@ -13,9 +13,13 @@
 
 #include <QApplication>
 #include <QMainWindow>
+#include <QGridLayout>
 #include <QVBoxLayout>
+#include <QFormLayout>
+#include <QGroupBox>
 #include <QPushButton>
 #include <QLabel>
+#include <QProgressBar>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QFileDialog>
@@ -43,7 +47,7 @@ class drawing_widget : public QWidget
 			QWidget(parent), 
 			m_drawing(false) 
 		{
-			setFixedSize(image_width * 20, image_height * 20);
+			setFixedSize(image_width * 12, image_height * 12);
 			m_image = QImage(size(), QImage::Format_Grayscale8);
 			m_image.fill(Qt::black);
 		}
@@ -136,46 +140,72 @@ class main_window : public QMainWindow
 		main_window(QWidget *parent = nullptr) : QMainWindow(parent), nwk(layers)
 		{
 			auto central_widget = new QWidget(this);
-			auto layout         = new QVBoxLayout(central_widget);
+		
+			// main layout, consisting of a left and a right layout
+			// the left shows the drawing area and buttons
+			// the right displays the softmax evaluation with sliders
+			auto grid_layout    = new QGridLayout(central_widget);
+
+			auto layout         = new QVBoxLayout();
 
 			m_drawing_widget = new drawing_widget(this);
 			layout->addWidget(m_drawing_widget);
 
-			m_eval_label = new QLabel("Draw a number", this);
+			m_eval_label = new QLabel("Draw a number");
 			m_eval_label->setAlignment(Qt::AlignCenter);
 			layout->addWidget(m_eval_label);
 
-			m_raw_eval_label = new QLabel("Raw network evaluation", this); 
+			m_raw_eval_label = new QLabel("Raw network evaluation"); 
 			m_raw_eval_label->setAlignment(Qt::AlignCenter);
+			m_raw_eval_label->setWordWrap(true);
 			layout->addWidget(m_raw_eval_label);
 
-			m_eval_button = new QPushButton("Evaluate drawing", this);
+			m_eval_button = new QPushButton("Evaluate drawing");
 			connect(m_eval_button, &QPushButton::clicked, this, &main_window::evaluate_drawing);
 			layout->addWidget(m_eval_button);
 
-			auto clear_button = new QPushButton("Clear", this);
+			auto clear_button = new QPushButton("Clear");
 			connect(clear_button, &QPushButton::clicked, m_drawing_widget, &drawing_widget::clear);
 			layout->addWidget(clear_button);
 
-			m_train_button = new QPushButton("Train network", this);
+			m_train_button = new QPushButton("Train network");
 			connect(m_train_button, &QPushButton::clicked, this, &main_window::dispatch_training); 
 			layout->addWidget(m_train_button);
 
-			auto save_button = new QPushButton("Save as 28x28 grayscale", this);
+			auto save_button = new QPushButton("Save as 28x28 grayscale");
 			connect(save_button, &QPushButton::clicked, m_drawing_widget, &drawing_widget::save_scaled_image);
 			layout->addWidget(save_button);
 
-			auto quit_button = new QPushButton("Quit", this);
+			auto quit_button = new QPushButton("Quit");
 			connect(quit_button, &QPushButton::clicked, qApp, &QApplication::quit);
 			layout->addWidget(quit_button);
 
-			layout->setSizeConstraint(QLayout::SetFixedSize);
+			// softmax display column on the right of window
+			
+			// put everything in a groupbox
+			auto groupbox = new QGroupBox("Softmax evaluation");
+
+			auto softmax_layout = new QFormLayout();
+
+			for(int i = 0; i < 10; ++i)
+			{
+				m_bars[i] = new QProgressBar();
+				m_bars[i]->setRange(0, 100);
+				m_bars[i]->setValue(0);
+				softmax_layout->addRow(QString::fromStdString(std::format("{}:", i)), m_bars[i]);
+			}
+			
+			//groupbox->setFlat(true);
+			groupbox->setLayout(softmax_layout);	
+			grid_layout->addLayout(layout, 0, 0);
+			grid_layout->addWidget(groupbox, 0, 1);
+			grid_layout->setSizeConstraint(QLayout::SetFixedSize);
 
 			setCentralWidget(central_widget);
-			setGeometry(100, 100, image_width * 20, image_height * 20);
+			//setGeometry(100, 100, image_width * 20, image_height * 20);
 			setWindowTitle("mnist-digit-rec-cpp gui");
-			setFixedSize(sizeHint());
-			setWindowIcon(QIcon(QString("../data/icon.png")));
+			//setFixedSize(sizeHint());
+			//setWindowIcon(QIcon(QString("../data/icon.png")));
 		}
 
 		void evaluate_drawing()
@@ -222,6 +252,11 @@ class main_window : public QMainWindow
 		QLabel         *m_raw_eval_label = nullptr;
 		QPushButton    *m_eval_button    = nullptr;
 		QPushButton    *m_train_button   = nullptr;
+		
+		// one progress bar for each digit that shows
+		// the probability the network this the drawing
+		// shows
+		std::array<QProgressBar *, 10> m_bars = { nullptr };
 
 		std::unique_ptr<QThread> m_training_thread = nullptr;
 		thwmakos::network nwk;
