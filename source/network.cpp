@@ -163,7 +163,7 @@ column_vector network::evaluate(const column_vector &input) const
 
 	for(int i = 0; i < static_cast<int>(m_weights.size()); ++i)
 	{
-		result = elementwise_apply(m_weights[i] * result - m_biases[i], sigmoid);
+		result = elementwise_apply(m_weights[i] * result + m_biases[i], sigmoid);
 	}
 
 	return result;

@@ -126,7 +126,8 @@ void add_column_to(matrix_span mat, const_matrix_span column)
 		for(auto j = 0; j < mat.num_columns; ++j)
 		{
 			// FIXME: This should be += but -= gives stable and accurate results????
-			mat[i, j] -= column.data[i];
+			// It is because I made a mistake in network::evaluate() with bias sign
+			mat[i, j] += column.data[i];
 		}
 	}
 }
