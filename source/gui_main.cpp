@@ -38,7 +38,20 @@
 constexpr auto image_width = 28;
 constexpr auto image_height = 28;
 
-constexpr std::array<int, 3> layers = { 28 * 28, 30, 10 };
+constexpr std::array<int, 3> layers = { 28 * 28, 100, 10 };
+
+thwmakos::column_vector softmax(thwmakos::column_vector input)
+{
+	// undo last layer sigmoid
+	std::for_each(input.begin(), input.end(), [](thwmakos::FloatType &item) { item = -std::log(1.0f / item - 1.0f); });
+	std::for_each(input.begin(), input.end(), [](thwmakos::FloatType &item) { item = std::exp(item); });
+
+	auto denominator = std::reduce(input.cbegin(), input.cend(), thwmakos::FloatType { 0.0 });
+
+	input *= (1.0f / denominator); 
+
+	return input;
+}
 
 class drawing_widget : public QWidget
 {
@@ -225,6 +238,13 @@ class main_window : public QMainWindow
 			}
 
 			m_raw_eval_label->setText(QString::fromStdString(raw_eval_text));
+
+			auto softmax_eval = softmax(std::move(eval));
+
+			for(int i = 0; i < softmax_eval.length(); ++i)
+			{
+				m_bars[i]->setValue(softmax_eval[i] * 100);
+			}
 		}
 
 		void dispatch_training()
