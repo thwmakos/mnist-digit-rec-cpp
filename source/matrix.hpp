@@ -199,8 +199,7 @@ class matrix2d
 		{}
 		
 		// construct a matrix from raw data, moving data argument into m_data
-		explicit matrix2d(int num_rows, int num_columns, std::vector<FloatType> data)
-			requires is_both_dynamic<Rows, Columns> :
+		explicit matrix2d(int num_rows, int num_columns, std::vector<FloatType> data) :
 			matrix2d(num_rows, num_columns, std::move(data), private_constructor_tag {})
 		{}
 
@@ -746,12 +745,16 @@ matrix2d<Rows, Columns> elementwise_multiply(matrix2d<Rows, Columns> left, const
 template<int Rows, int Columns>
 matrix2d<Rows, Columns> elementwise_apply(const matrix2d<Rows, Columns> &mat, std::regular_invocable<FloatType> auto func)
 {
-	const auto [num_rows, num_cols] = mat.size();
-	matrix2d<Rows, Columns> result(num_rows, num_cols);
+	const int num_rows = mat.num_rows();
+	const int num_cols = mat.num_cols();
+	//matrix2d<Rows, Columns> result(num_rows, num_cols);
 	
-	std::transform(mat.cbegin(), mat.cend(), result.begin(), func);
+	std::vector<FloatType> result_data {};
+	result_data.reserve(num_rows * num_cols);	
+	
+	std::transform(mat.cbegin(), mat.cend(), std::back_inserter(result_data), func);
 
-	return result;
+	return matrix2d<Rows, Columns>(num_rows, num_cols, std::move(result_data));
 }
 
 template<int Rows, int Columns>
