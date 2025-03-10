@@ -224,9 +224,6 @@ network::gradient network::backpropagation(const matrix &inputs, const matrix &e
 	const int num_layers  = static_cast<int>(m_layers.size());
 
 	network::gradient total_gradient(std::span(m_layers.cbegin(), m_layers.cend()));
-	std::vector<network::gradient> gradients(num_samples, total_gradient); // one gradient for each
-																		   // sample (i.e. each
-																		   // column)
 
 	std::vector<matrix> activations { inputs }; // first activation is the input (training samples)
 	std::vector<matrix> weighted_inputs {};
