@@ -771,7 +771,7 @@ bool operator!=(const matrix2d<Rows, Columns> &left, const matrix2d<Rows, Column
 
 // unary plus, returns its argument
 template<int Rows, int Columns>
-matrix2d<Rows, Columns> operator+(const matrix2d<Rows, Columns> &mat)
+matrix2d<Rows, Columns> &operator+(const matrix2d<Rows, Columns> &mat)
 {
 	return mat;
 }
