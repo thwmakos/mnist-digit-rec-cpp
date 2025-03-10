@@ -160,25 +160,4 @@ bool is_equal(const_matrix_span left, const_matrix_span right)
 	return true;
 }
 
-matrix operator+(const matrix &mat)
-{
-	return mat;
-}
-
-matrix operator-(const matrix &mat)
-{
-	const auto [num_rows, num_cols] = mat.size();
-	matrix res(num_rows, num_cols);
-	
-	for(auto i = 0; i < num_rows; ++i)
-	{
-		for(auto j = 0; j < num_cols; ++j)
-		{
-			res[i, j] = -mat[i, j];
-		}
-	}
-
-	return res;
-}
-
 } // namespace thwmakos
