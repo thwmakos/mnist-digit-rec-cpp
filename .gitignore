@@ -6,3 +6,5 @@ build-rel/*
 .kdev4/*
 *.kdev4
 .cache/*
+*perf*
+.gitignore
