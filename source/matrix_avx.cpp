@@ -314,6 +314,18 @@ void scalar_multiply_avx512(matrix_span mat, FloatType scalar)
 
 #ifdef __AVX2__ 
 
+// from the bit mask below, we convert to the 8 rightmost most bits to an AVX2 mask
+__m256i make_avx2_mask(int32_t bitmask)
+{
+	//int32_t mask = (1 << lanes_remaining) - 1u;
+	__m256i mask = _mm256_set1_epi32(bitmask);
+	__m256i c = _mm256_setr_epi32(1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7);
+	mask = _mm256_and_si256(mask, c);
+	mask = _mm256_cmpeq_epi32(mask, c);
+
+	return mask;
+}
+
 // AVX2 implementation of previous functions
 template<int num_submatrix_rows, int num_submatrix_cols, bool masked>
 void submatrix_avx2(const_matrix_span A, const_matrix_span B, matrix_span C, int num_row, int num_col)
@@ -363,13 +375,7 @@ void submatrix_avx2(const_matrix_span A, const_matrix_span B, matrix_span C, int
 			}
 			else if(lanes_remaining > 0)
 			{
-				// from the bit mask below we need to convert to
-				// AVX2 mask
-				int32_t mask = (1 << lanes_remaining) - 1u;
-				masks[j] = _mm256_set1_epi32(mask);
-				__m256i c = _mm256_setr_epi32(1 << 0, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7);
-				masks[j] = _mm256_and_si256(masks[j], c);
-				masks[j] = _mm256_cmpeq_epi32(masks[j], c);
+				masks[j] = make_avx2_mask((1 << lanes_remaining) - 1u);
 			}
 			else
 			{
@@ -489,6 +495,31 @@ void multiply_avx2(matrix_span C, const_matrix_span A, const_matrix_span B)
 	{
 		submatrix_avx2<num_submatrix_rows, num_submatrix_cols, true>(A, B, C, i, j);
 	}
+}
+
+void scalar_multiply_avx2(matrix_span mat, FloatType scalar)
+{
+	constexpr int num_lanes = 8;
+
+	float *mat_data = mat.data.data();
+	const int num_elements = static_cast<int>(mat.data.size());
+
+	int i = 0;
+	
+	__m256 scalar_reg = _mm256_set1_ps(scalar);
+
+	for(; i + num_lanes < num_elements; i += num_lanes)
+	{
+		__m256 mat_reg = _mm256_loadu_ps(mat_data + i);
+		mat_reg = _mm256_mul_ps(mat_reg, scalar_reg);
+		_mm256_storeu_ps(mat_data + i, mat_reg);
+	}
+
+	// handle tail
+	__m256i mask = make_avx2_mask((1u << (num_elements - i)) - 1u);
+	__m256 mat_reg = _mm256_maskload_ps(mat_data + 1, mask);
+	mat_reg = _mm256_mul_ps(mat_reg, scalar_reg);
+	_mm256_maskstore_ps(mat_data + i, mask, mat_reg);
 }
 
 #endif // __AVX2__

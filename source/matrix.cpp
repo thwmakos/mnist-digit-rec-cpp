@@ -61,6 +61,8 @@ void scalar_multiply(matrix_span mat, FloatType scalar)
 {
 #ifdef AVX512F
 	scalar_multiply_avx512(mat, scalar);
+#elif AVX2
+	scalar_multiply_avx2(mat, scalar);
 #else
 	for(auto row = 0; row < mat.num_rows; ++row)
 	{
