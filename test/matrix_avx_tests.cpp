@@ -170,10 +170,10 @@ TEST_CASE("test AVX512 matrix multiplication")
 		std::println("AVX2 multiply took {}", duration3);
 #endif
 #ifdef __AVX512F__
-		std::println("AVX512 was {} times faster than naive", duration1.count() / (duration2.count() != 0 ? duration2.count() : 1));
+		std::println("AVX512 was {:.1f} times faster than naive", static_cast<float>(duration1.count()) / (duration2.count() != 0 ? duration2.count() : 1));
 #endif
 #ifdef __AVX2__
-	std::println("AVX2 was {} times faster than naive", duration1.count() / (duration3.count() != 0 ? duration3.count() : 1));
+	std::println("AVX2 was {:.1f} times faster than naive", static_cast<float>(duration1.count()) / (duration3.count() != 0 ? duration3.count() : 1));
 #endif
 		// add one above to avoid division by zero
 	}
