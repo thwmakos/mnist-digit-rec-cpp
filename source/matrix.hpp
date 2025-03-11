@@ -6,15 +6,6 @@
 // matrix.hpp
 //
 
-// TODO: Matrix initialisation is slow as all the elements are zeroed due to using a std::vector as
-// storage. Almost 1/3 of runtime (seen using perf and gprofng) when training the model is spent
-// memsetting the elements to zero when creating a copy during operator calls. A solution for this
-// would be to use std::make_unique_for_overwrite and use raw storage instead of going through
-// vector. This will mean though that matrices will not be zero-initialised which is desirable in
-// most cases. Need to consider how this can be achieved. Possibility is to opt-in for
-// zero-initialisation through a flag in constructor. This will also necessitate changing the 
-// type of m_data in the class.
-
 #ifndef MATRIX_HPP_INCLUDED
 #define MATRIX_HPP_INCLUDED
 
