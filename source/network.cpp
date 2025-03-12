@@ -257,7 +257,6 @@ network::gradient network::backpropagation(const matrix &inputs, const matrix &e
 	for(int j = 0; j < num_samples; ++j)
 	{
 		auto delta_column = get_column(delta, j);
-		// using the reshape member here and below to avoid extra allocation
 		//add_to(total_gradient.weights[num_layers - 2], delta_column * get_column(activations[num_layers - 2], j).to_row(), 1.0 / num_samples);
 		total_gradient.weights[num_layers - 2] += (1.0 / num_samples) * delta_column * get_column(activations[num_layers - 2], j).to_row(); 	
 		total_gradient.biases[num_layers - 2]  += (1.0 / num_samples) * delta_column;
