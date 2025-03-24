@@ -136,7 +136,8 @@ void add_column_to(matrix_span mat, const_matrix_span column)
 
 bool is_equal(const_matrix_span left, const_matrix_span right)
 {
-	constexpr FloatType eps = 1.0e-3;
+	constexpr FloatType abs_eps = 1.0e-4; // for comparison with values near zero
+	constexpr FloatType rel_eps = 1.0e-4; // for comparison 'away' from zero
 
 	if(left.num_rows != right.num_rows ||
 	   left.num_columns != right.num_columns)
@@ -150,12 +151,31 @@ bool is_equal(const_matrix_span left, const_matrix_span right)
 		{
 			// if two elements are equal
 			// TODO: there are better way to check float equality
-			if(left[row, col] - right[row, col] >= eps)
+			//if(left[row, col] - right[row, col] >= eps)
+			//{
+			//	return false;
+			//}
+			//if(left.at(row, col) != right.at(row, col))
+			//	return false;
+
+			FloatType a = left[row, col];
+			FloatType b = right[row, col];
+
+			FloatType abs_diff = std::abs(a - b);
+
+			if(abs_diff <= abs_eps)
+			{
+				continue;
+			}
+
+			FloatType abs_a   = std::abs(a);
+			FloatType abs_b   = std::abs(b);	
+			FloatType largest = std::max(abs_a, abs_b);
+
+			if(abs_diff / largest > rel_eps)
 			{
 				return false;
 			}
-			//if(left.at(row, col) != right.at(row, col))
-			//	return false;
 		}
 	}
 
