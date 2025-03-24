@@ -401,11 +401,11 @@ class matrix2d
 		{
 			if constexpr(Rows == 1)
 			{
-				return at(1, n);
+				return at(0, n);
 			}
 			else
 			{
-				return at(n, 1);
+				return at(n, 0);
 			}
 		}
 
@@ -414,11 +414,11 @@ class matrix2d
 		{
 			if constexpr(Rows == 1)
 			{
-				return at(1, n);
+				return at(0, n);
 			}
 			else
 			{
-				return at(n, 1);
+				return at(n, 0);
 			}
 		}
 
