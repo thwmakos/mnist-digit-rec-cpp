@@ -99,7 +99,7 @@ TEST_CASE("testing matrix class")
 
 	matrix mat6 = mat5;
 	mat5 += 2.0f * mat5;
-	mat5 -= mat6;
+	mat5 -= 2.0f * mat6;
 	CHECK(mat6 == mat5);
 
 	matrix mat7 {{1.0f, 2.0f, 3.0f, 4.0f}, {5.0f, 6.0f, 7.0f, 8.0f}, {9.0f, 10.0f, 11.0f, 12.0f}};
