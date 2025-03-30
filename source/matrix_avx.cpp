@@ -517,7 +517,7 @@ void scalar_multiply_avx2(matrix_span mat, FloatType scalar)
 
 	// handle tail
 	__m256i mask = make_avx2_mask((1u << (num_elements - i)) - 1u);
-	__m256 mat_reg = _mm256_maskload_ps(mat_data + 1, mask);
+	__m256 mat_reg = _mm256_maskload_ps(mat_data + i, mask);
 	mat_reg = _mm256_mul_ps(mat_reg, scalar_reg);
 	_mm256_maskstore_ps(mat_data + i, mask, mat_reg);
 }
