@@ -71,7 +71,7 @@ concept is_fixed = (Rows != Dynamic && Columns != Dynamic);
 // TODO: decide if e.g. a matrix2d<Dynamic, Dynamic> with dimensions
 // (n, m) should be treated as a matrix2d<n, m>. At the they are different
 
-// a 2d-matrix view into a continuous extend of FloatType values
+// a 2d-matrix view into a continuous extend of type T values
 // non-owning and non-templated, to be used with functions 
 // performing matrix operations
 template<typename T>
