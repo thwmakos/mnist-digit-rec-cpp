@@ -6,7 +6,7 @@ import numpy as np
 import struct
 from pathlib import Path
 
-file = "./data/t10k-images-idx3-ubyte"
+file = "../data/t10k-images-idx3-ubyte"
 
 with open(file, 'rb') as f:
     tdata = np.fromfile(f, dtype=np.uint8)
