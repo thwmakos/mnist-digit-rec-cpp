@@ -70,22 +70,42 @@ struct matrix2d_view
 	FloatType &operator()(int row, int col)
 		requires (!std::is_const_v<T>)
 	{
+		if constexpr(debug_build)
+		{
+			return at(row, col);
+		}
+
 		return parent_span[start_row + row, start_col + col];
 	}
 		
 	FloatType operator()(int row, int col) const
 	{
+		if constexpr(debug_build)
+		{
+			return at(row, col);
+		}
+
 		return parent_span[start_row + row, start_col + col];
 	}
 
 	FloatType &operator[](int row, int col)
 		requires (!std::is_const_v<T>)
 	{
+		if constexpr(debug_build)
+		{
+			return at(row, col);
+		}
+
 		return operator()(row, col);
 	}
 
 	FloatType operator[](int row, int col) const
 	{
+		if constexpr(debug_build)
+		{
+			return at(row, col);
+		}
+
 		return operator()(row, col);
 	}
 
@@ -93,6 +113,36 @@ struct matrix2d_view
 	{
 		return { num_rows, num_cols };
 	}
+	
+	// get address of element, is used to load/store during matrix operations	
+	const float *address(int row, int col) const
+	{
+		if constexpr(debug_build)
+		{
+			if (row < 0 || row >= num_rows || col < 0 || col >= num_cols) 
+			{
+				throw std::out_of_range(std::format("matrix_view subscripts ({}, {}) out of range", row, col));
+			}
+		}
+
+		return parent_span.data.data() + parent_span.index(start_row + row, start_col + col);
+	}
+	
+	// get address of element, is used to load/store during matrix operations	
+	float *address(int row, int col)
+		requires (!std::is_const_v<T>)
+	{
+		if constexpr(debug_build)
+		{
+			if (row < 0 || row >= num_rows || col < 0 || col >= num_cols) 
+			{
+				throw std::out_of_range(std::format("matrix_view subscripts ({}, {}) out of range", row, col));
+			}
+		}
+
+		return parent_span.data.data() + parent_span.index(start_row + row, start_col + col);
+	}
+
 };
 
 using matrix_view       = matrix2d_view<FloatType>;
