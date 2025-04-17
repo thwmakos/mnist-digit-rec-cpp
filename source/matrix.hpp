@@ -240,9 +240,9 @@ class matrix2d
 		// constructors, destructor, assignment operators are sufficient, 
 		// delegate these to the std::vector m_data
 		matrix2d(const matrix2d &) = default;
-		matrix2d(matrix2d &&) = default;
+		matrix2d(matrix2d &&) noexcept = default;
 		matrix2d& operator=(const matrix2d &) = default;
-		matrix2d& operator=(matrix2d &&) = default;
+		matrix2d& operator=(matrix2d &&) noexcept = default;
 		~matrix2d() = default;
 		
 		std::tuple<int, int> size() const
