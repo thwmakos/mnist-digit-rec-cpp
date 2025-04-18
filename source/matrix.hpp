@@ -104,6 +104,21 @@ struct matrix2d_span
 	{
 		return row * num_columns + col;
 	}
+	
+	// conversion operator to const view so that matrix2d_span<const T> can be passed
+	// where matrix2d_span<T> is expected
+	operator matrix2d_span<const std::remove_const_t<T>>() const
+		requires (!std::is_const_v<T>)
+	{
+		using non_const_T = std::remove_const_t<T>;
+		
+		return matrix2d_span<const non_const_T> 
+		{
+			num_rows,
+			num_columns,
+			std::span<const non_const_T>(data)
+		};
+	}
 };
 
 // immutable and mutable spans

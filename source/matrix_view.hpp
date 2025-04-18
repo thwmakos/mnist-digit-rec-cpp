@@ -45,6 +45,30 @@ struct matrix2d_view
 	// constructor for creating a view of the entire matrix
 	explicit matrix2d_view(matrix2d_span<T> _parent_span) :
 		matrix2d_view(_parent_span, 0, 0, _parent_span.num_rows, _parent_span.num_columns) {}
+	
+	// conversion operator to const view so that matrix2d_view<const T> can be passed
+	// where matrix2d_view<T> is expected
+	operator matrix2d_view<const std::remove_const_t<T>>() const 
+		requires (!std::is_const_v<T>)
+	{
+		using non_const_T = std::remove_const_t<T>;
+		
+		matrix2d_span<const non_const_T> const_parent
+		{
+			parent_span.num_rows,
+			parent_span.num_columns,
+			std::span<const non_const_T>(parent_span.data)
+		};
+		
+		return matrix2d_view<const non_const_T>
+		{
+			const_parent,
+			start_row,
+			start_col,
+			num_rows,
+			num_cols
+		};
+	}
 
 	FloatType &at(int row, int col) 
 		requires (!std::is_const_v<T>)
