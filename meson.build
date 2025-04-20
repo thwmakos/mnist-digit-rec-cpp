@@ -13,7 +13,7 @@ cpp_compile_args = ['-march=native']
 
 # extra optimisation options
 if get_option('buildtype').startswith('release')
-    add_project_arguments(['-ffast-math', '-DNDEBUG'], language : 'cpp')
+    add_project_arguments(['-fno-math-errno', '-fno-trapping-math', '-DNDEBUG'], language : 'cpp')
 endif
 
 # for parallel stl algorithms
