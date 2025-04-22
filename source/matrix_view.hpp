@@ -141,12 +141,15 @@ struct matrix2d_view
 	// get address of element, is used to load/store during matrix operations	
 	const float *address(int row, int col) const
 	{
+		// no bound checks here -- it is a mistake to do them because
+		// we need to take addresses out of bound but these loads/stores
+		// will be masked
 		if constexpr(debug_build)
 		{
-			if (row < 0 || row >= num_rows || col < 0 || col >= num_cols) 
-			{
-				throw std::out_of_range(std::format("matrix_view subscripts ({}, {}) out of range", row, col));
-			}
+			//if (row < 0 || row >= num_rows || col < 0 || col >= num_cols) 
+			//{
+			//	throw std::out_of_range(std::format("matrix_view subscripts ({}, {}) out of range", row, col));
+			//}
 		}
 
 		return parent_span.data.data() + parent_span.index(start_row + row, start_col + col);
@@ -158,10 +161,10 @@ struct matrix2d_view
 	{
 		if constexpr(debug_build)
 		{
-			if (row < 0 || row >= num_rows || col < 0 || col >= num_cols) 
-			{
-				throw std::out_of_range(std::format("matrix_view subscripts ({}, {}) out of range", row, col));
-			}
+			//if (row < 0 || row >= num_rows || col < 0 || col >= num_cols) 
+			//{
+			//	throw std::out_of_range(std::format("matrix_view subscripts ({}, {}) out of range", row, col));
+			//}
 		}
 
 		return parent_span.data.data() + parent_span.index(start_row + row, start_col + col);
