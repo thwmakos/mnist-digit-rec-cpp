@@ -32,8 +32,7 @@ constexpr bool release_build = true;
 constexpr bool release_build = false;
 #endif
 
-template<typename MultiplyFunc>
-auto multiply_helper(const matrix &left, const matrix &right, MultiplyFunc func)
+auto multiply_helper(const matrix &left, const matrix &right, auto &&func)
 {
 	if(left.num_cols() != right.num_rows())
 	{
@@ -45,6 +44,18 @@ auto multiply_helper(const matrix &left, const matrix &right, MultiplyFunc func)
 	func(prod, left, right);
 
 	return prod;
+}
+
+// return a tuple of the result of the expression func and the duration,
+// in milliseconds the execution took
+auto time_function_call(auto &&func)
+{
+	auto start    = std::chrono::high_resolution_clock::now();
+	auto result   = (func)();
+	auto end      = std::chrono::high_resolution_clock::now(); 
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start); 
+
+	return std::tuple { result, duration };
 }
 
 // fill a matrix with random values
@@ -112,6 +123,10 @@ TEST_CASE("test AVX512 matrix multiplication")
 		{ 
 			return multiply_helper(A, B, thwmakos::multiply_avx2);
 		};
+	auto multiply_tiled_helper = [] (const matrix &A, const matrix &B)
+		{
+			return multiply_helper(A, B, thwmakos::multiply_avx512_blocked_tiled);
+		};
 
 	// test unaligned sizes that use masked version of submatrix
 	for(int n : {1, 2, 3, 11, 17, 23, 31, 39})
@@ -129,6 +144,7 @@ TEST_CASE("test AVX512 matrix multiplication")
 				auto expected = multiply_naive_helper(A, B);
 #ifdef __AVX512F__
 				CHECK_MESSAGE(expected == multiply_avx512_helper(A, B), std::format("avx512: dimensions: {}, {}, {}", n, middle, m));
+				CHECK_MESSAGE(expected == multiply_tiled_helper(A, B), std::format("avx512: dimensions: {}, {}, {}", n, middle, m));
 #endif
 #ifdef __AVX2__
 				CHECK_MESSAGE(expected == multiply_avx2_helper(A, B), std::format("avx2: dimensions: {}, {}, {}", n, middle, m));
@@ -136,35 +152,29 @@ TEST_CASE("test AVX512 matrix multiplication")
 			}
 		}
 	}
-
+	
 	// test speedup in optimised build
 	if constexpr(release_build)
 	{
-		matrix A_large(2011, 1994);
-		matrix B_large(1994, 777);
+		matrix A_large(2011, 2993);
+		matrix B_large(2993, 1777);
 		randomise(A_large);
 		randomise(B_large);
-		auto t1 = std::chrono::high_resolution_clock::now();
-		matrix C1 = multiply_naive_helper(A_large, B_large);
-		auto t2 = std::chrono::high_resolution_clock::now();
+
+		auto [C1, duration1] = time_function_call([&]() { return multiply_naive_helper(A_large, B_large); } );
+
 #ifdef __AVX512F__
-		matrix C2 = multiply_avx512_helper(A_large, B_large);
+		auto [C2, duration2] = time_function_call([&]() { return multiply_avx512_helper(A_large, B_large); } );
+		auto [Cbt, duration_bt] = time_function_call([&] () { return multiply_tiled_helper(A_large, B_large); } );
 #endif
-		auto t3 = std::chrono::high_resolution_clock::now();
 #ifdef __AVX2__
-		matrix C3 = multiply_avx2_helper(A_large, B_large);
+		auto [C3, duration3] = time_function_call([&]() { return multiply_avx2_helper(A_large, B_large); } );
 #endif
-		auto t4 = std::chrono::high_resolution_clock::now();
-
-		auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-		auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2);
-		auto duration3 = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3);
-
-
 		std::println("A dimensions: ({}, {}), B dimensions: ({}, {})", A_large.num_rows(), A_large.num_cols(), B_large.num_rows(), B_large.num_cols());
 		std::println("Naive multiply with transpose took {}", duration1);
 #ifdef __AVX512F__
 		std::println("AVX512 multiply took {}", duration2);
+		std::println("AVX512 blocked tile took {}", duration_bt);
 #endif
 #ifdef __AVX2__
 		std::println("AVX2 multiply took {}", duration3);
