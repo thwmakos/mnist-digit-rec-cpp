@@ -8,3 +8,5 @@ build-rel/*
 .cache/*
 *perf*
 .gitignore
+*.kate-swp
+*.build
