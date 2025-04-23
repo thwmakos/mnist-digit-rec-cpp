@@ -37,15 +37,15 @@ namespace avx512
 	// each block into is further split into tiles
 
 	// ideally we want:
+	// -- num_A_block_cols (equivalently num_B_block_rows) by num_block_rows to fit in the L3 cache
+	// -- num_block_cols by num_A_block_cols to fit in the L2 cache
 	// -- num_A_block_cols by num_tile_rows to fit in the L1 cache
-	// -- num_tile_rows by  num_A_block_cols to fit in the L2 cache
-	// -- num_A_block_cols by num_tile_cols to fit in the L3 cache
 	constexpr int num_tile_rows = 8;
-	constexpr int num_tile_cols = 3 * num_lanes;	
+	constexpr int num_tile_cols = 5 * num_lanes;
 
 	// a num_time_rows by num_tile_cols sized
-	constexpr int num_block_rows = num_tile_rows * 64;
-	constexpr int num_block_cols = num_tile_cols * 64;
+	constexpr int num_block_rows = num_tile_rows * 128;
+	constexpr int num_block_cols = num_tile_cols * 4;
 		
 	constexpr int num_A_block_cols = 1024;
 	constexpr int num_B_block_rows = num_A_block_cols;
