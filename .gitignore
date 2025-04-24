@@ -9,4 +9,4 @@ build-rel/*
 *perf*
 .gitignore
 *.kate-swp
-*.build
+.kateproject.build
