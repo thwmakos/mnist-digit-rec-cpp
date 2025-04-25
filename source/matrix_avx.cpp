@@ -40,8 +40,8 @@ namespace avx512
 	// -- num_A_block_cols (equivalently num_B_block_rows) by num_block_rows to fit in the L3 cache
 	// -- num_block_cols by num_A_block_cols to fit in the L2 cache
 	// -- num_A_block_cols by num_tile_rows to fit in the L1 cache
-	constexpr int num_tile_rows = 8;
-	constexpr int num_tile_cols = 5 * num_lanes;
+	constexpr int num_tile_rows = 6;
+	constexpr int num_tile_cols = 3 * num_lanes;
 
 	// a num_time_rows by num_tile_cols sized
 	constexpr int num_block_rows = num_tile_rows * 128;
@@ -51,6 +51,13 @@ namespace avx512
 	constexpr int num_B_block_rows = num_A_block_cols;
 
 	static_assert(num_tile_cols % num_lanes == 0);
+}
+
+// return the multiple of n that is the closest and
+// larger than value
+int round_up_to_multiple_of(int value, int n)
+{
+    return ((value + n - 1) / n) * n;
 }
 
 // assume that A, B are padded and we do not need masks 
@@ -155,9 +162,9 @@ void load_block(const_matrix_view source, matrix_span dest)
 void multiply_avx512_blocked_tiled(matrix_span C, const_matrix_span A, const_matrix_span B)
 {
 	// we want this to fit in L2 cache
-	static std::array<FloatType, avx512::num_block_rows * avx512::num_A_block_cols> A_cache_storage {};
+	static std::array<FloatType, avx512::num_block_rows * avx512::num_A_block_cols> A_cache_storage;
 	// we want this to fit in L3 cache
-	static std::array<FloatType, avx512::num_B_block_rows * avx512::num_block_cols> B_cache_storage {};
+	static std::array<FloatType, avx512::num_B_block_rows * avx512::num_block_cols> B_cache_storage;
 
 	matrix_span A_cache { avx512::num_block_rows, avx512::num_A_block_cols, A_cache_storage };
 	matrix_span B_cache { avx512::num_B_block_rows, avx512::num_block_cols, B_cache_storage };
@@ -169,7 +176,6 @@ void multiply_avx512_blocked_tiled(matrix_span C, const_matrix_span A, const_mat
 		arr.fill(0b1111111111111111); // enable all the lanes
 		return arr;
 	} ();
-
 
 	const auto nontrivial_masks = [&C]
 	{
@@ -211,6 +217,12 @@ void multiply_avx512_blocked_tiled(matrix_span C, const_matrix_span A, const_mat
 			const int block_middle_num = std::min(avx512::num_B_block_rows, B.num_rows - k);
 
 			const_matrix_view B_block { B, k, n, block_middle_num, block_num_cols };
+
+			// make cache span as large as needed to avoid zeroing large memory blocks
+			// for no reason
+			B_cache.num_rows    = block_middle_num;
+			B_cache.num_columns = round_up_to_multiple_of(block_num_cols, avx512::num_tile_cols);
+
 			load_block(B_block, B_cache);
 
 			for(int m = 0; m < C.num_rows; m += avx512::num_block_rows)
@@ -218,6 +230,10 @@ void multiply_avx512_blocked_tiled(matrix_span C, const_matrix_span A, const_mat
 				const int block_num_rows = std::min(avx512::num_block_rows, C.num_rows - m);
 
 				const_matrix_view A_block { A, m, k, block_num_rows, block_middle_num };
+
+				A_cache.num_rows    = block_num_rows;
+				A_cache.num_columns = block_middle_num;
+
 				load_block(A_block, A_cache);
 
 				// accumulate tiles from the (m, n)-th block of C
