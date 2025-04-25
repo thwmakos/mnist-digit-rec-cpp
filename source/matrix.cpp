@@ -19,8 +19,7 @@ void multiply(matrix_span product, const_matrix_span left, const_matrix_span rig
 	// no need to check for dimensions, was already done in caller
 	// dispatch to appropriate implementation
 #ifdef __AVX512F__
-	multiply_avx512(product, left, right);
-	//multiply_avx512_blocked_tiled(product, left, right);
+	multiply_avx512_blocked_tiled(product, left, right);
 #elifdef __AVX2__
 	multiply_avx2(product, left, right);
 #else

@@ -117,15 +117,11 @@ TEST_CASE("test AVX512 matrix multiplication")
 		};
 	auto multiply_avx512_helper = [] (const matrix &A, const matrix &B) 
 		{ 
-			return multiply_helper(A, B, thwmakos::multiply_avx512);
+			return multiply_helper(A, B, thwmakos::multiply_avx512_blocked_tiled);
 		};
 	auto multiply_avx2_helper = [] (const matrix &A, const matrix &B) 
 		{ 
 			return multiply_helper(A, B, thwmakos::multiply_avx2);
-		};
-	auto multiply_tiled_helper = [] (const matrix &A, const matrix &B)
-		{
-			return multiply_helper(A, B, thwmakos::multiply_avx512_blocked_tiled);
 		};
 
 	// test unaligned sizes that use masked version of submatrix
@@ -144,7 +140,6 @@ TEST_CASE("test AVX512 matrix multiplication")
 				auto expected = multiply_naive_helper(A, B);
 #ifdef __AVX512F__
 				CHECK_MESSAGE(expected == multiply_avx512_helper(A, B), std::format("avx512: dimensions: {}, {}, {}", n, middle, m));
-				CHECK_MESSAGE(expected == multiply_tiled_helper(A, B), std::format("avx512: dimensions: {}, {}, {}", n, middle, m));
 #endif
 #ifdef __AVX2__
 				CHECK_MESSAGE(expected == multiply_avx2_helper(A, B), std::format("avx2: dimensions: {}, {}, {}", n, middle, m));
@@ -165,7 +160,6 @@ TEST_CASE("test AVX512 matrix multiplication")
 
 #ifdef __AVX512F__
 		auto [C2, duration2] = time_function_call([&]() { return multiply_avx512_helper(A_large, B_large); } );
-		auto [Cbt, duration_bt] = time_function_call([&] () { return multiply_tiled_helper(A_large, B_large); } );
 #endif
 #ifdef __AVX2__
 		auto [C3, duration3] = time_function_call([&]() { return multiply_avx2_helper(A_large, B_large); } );
@@ -173,8 +167,7 @@ TEST_CASE("test AVX512 matrix multiplication")
 		std::println("A dimensions: ({}, {}), B dimensions: ({}, {})", A_large.num_rows(), A_large.num_cols(), B_large.num_rows(), B_large.num_cols());
 		std::println("Naive multiply with transpose took {}", duration1);
 #ifdef __AVX512F__
-		std::println("AVX512 multiply took {}", duration2);
-		std::println("AVX512 blocked tile took {}", duration_bt);
+		std::println("AVX512 blocked tiled took {}", duration2);
 #endif
 #ifdef __AVX2__
 		std::println("AVX2 multiply took {}", duration3);
