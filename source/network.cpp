@@ -13,7 +13,6 @@
 #include <cmath>
 #include <random>
 #include <algorithm>
-#include <execution>
 #include <span>
 #include <format>
 #include <print>

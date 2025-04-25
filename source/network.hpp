@@ -12,7 +12,6 @@
 #include "matrix.hpp"
 
 #include <algorithm>
-#include <array>
 #include <span>
 
 namespace thwmakos {
@@ -26,6 +25,16 @@ FloatType sigmoid_derivative(FloatType x);
 // helper function to convert the output of the
 // network::evaluate function to an int, representing 
 int output_to_int(const column_vector &output);
+
+// concept for a pair of output layer and loss function
+template<typename T>
+concept loss_function = requires(T t,
+								const column_vector &eval,
+								const column_vector &expected)
+{
+	// return loss associated with input
+	{ t.loss(eval, expected) } -> std::same_as<FloatType>;
+};
 
 // forward declaration from data_loader.hpp
 struct training_sample;
