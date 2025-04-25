@@ -77,8 +77,8 @@ concept is_fixed = (Rows != Dynamic && Columns != Dynamic);
 template<typename T>
 struct matrix2d_span
 {
-	const int num_rows;
-	const int num_columns;
+	int num_rows;
+	int num_columns;
 
 	std::span<T> data;
 
