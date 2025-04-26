@@ -21,7 +21,8 @@ void multiply(matrix_span product, const_matrix_span left, const_matrix_span rig
 #ifdef __AVX512F__
 	multiply_avx512_blocked_tiled(product, left, right);
 #elifdef __AVX2__
-	multiply_avx2(product, left, right);
+	//multiply_avx2(product, left, right);
+	multiply_avx2_blocked_tiled(product, left, right);
 #else
 	multiply_naive(product, left, right);
 #endif

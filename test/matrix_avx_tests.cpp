@@ -121,7 +121,7 @@ TEST_CASE("test AVX512 matrix multiplication")
 		};
 	auto multiply_avx2_helper = [] (const matrix &A, const matrix &B) 
 		{ 
-			return multiply_helper(A, B, thwmakos::multiply_avx2);
+			return multiply_helper(A, B, thwmakos::multiply_avx2_blocked_tiled);
 		};
 
 	// test unaligned sizes that use masked version of submatrix
