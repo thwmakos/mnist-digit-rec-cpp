@@ -8,11 +8,64 @@
 
 #include "matrix.hpp"
 #include "matrix_avx.hpp"
+#include "network.hpp"
+#include "matrix_view.hpp"
 
 #include <format>
 #include <print>
 
 namespace thwmakos {
+
+// blocked-tiled matrix multiplication
+// see matrix_avx.cpp for comments on how this works
+namespace matmul
+{
+	// the result matrix C = A * B is split into blocks and
+	// each block into is further split into tiles
+
+	// ideally we want:
+	// -- num_A_block_cols (equivalently num_B_block_rows) by num_block_rows to fit in the L3 cache
+	// -- num_block_cols by num_A_block_cols to fit in the L2 cache
+	// -- num_A_block_cols by num_tile_rows to fit in the L1 cache
+	constexpr int num_tile_rows = 4;
+	constexpr int num_tile_cols = 8;
+
+	// a num_time_rows by num_tile_cols sized
+	constexpr int num_block_rows = num_tile_rows * 32;
+	constexpr int num_block_cols = num_tile_cols * 6;
+
+	constexpr int num_A_block_cols = 256;
+	constexpr int num_B_block_rows = num_A_block_cols;
+}
+
+template<int num_tile_rows, int num_tile_cols>
+	requires (num_tile_rows > 0 && num_tile_cols > 0)
+void multiply_tile(matrix_view C, const_matrix_view A, const_matrix_view B)
+{
+	for(int i = 0; i < A.num_rows; ++i)
+	{
+		for(int j = 0; j < B.num_cols; ++j)
+		{
+			FloatType accumulator = 0.0;
+
+			for(int k = 0; k < A.num_cols; ++k)
+			{
+				accumulator += A[i, k] * B[k, j];
+			}
+
+			C[i, j] += accumulator;
+		}
+	}
+}
+
+void multiply_blocked_tiled(matrix_span C, const_matrix_span A, const_matrix_span B)
+{
+	// we want this to fit in L2 cache
+	// no need to zero-initialise as we zero the relevant entries in load_block
+	static std::array<FloatType, matmul::num_block_rows * matmul::num_A_block_cols> A_cache_storage;
+	// we want this to fit in L3 cache
+	static std::array<FloatType, matmul::num_B_block_rows * matmul::num_block_cols> B_cache_storage;
+}
 
 void multiply(matrix_span product, const_matrix_span left, const_matrix_span right)
 {
@@ -31,7 +84,6 @@ void multiply(matrix_span product, const_matrix_span left, const_matrix_span rig
 void multiply_naive(matrix_span product, const_matrix_span left, const_matrix_span right)
 {	
 	// naive implementation of matrix multiplication
-	// TODO: good learning opportunity for intrinsics here
 	
 	// transpose right first to ensure sequential access 
 	// to matrix elements
