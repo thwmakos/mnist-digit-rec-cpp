@@ -58,6 +58,9 @@ void multiply_tile(matrix_view C, const_matrix_view A, const_matrix_view B)
 	}
 }
 
+// this is implemented in matrix_avx.cpp
+void load_block(const_matrix_view source, matrix_span dest);
+
 void multiply_blocked_tiled(matrix_span C, const_matrix_span A, const_matrix_span B)
 {
 	// we want this to fit in L2 cache
@@ -65,6 +68,54 @@ void multiply_blocked_tiled(matrix_span C, const_matrix_span A, const_matrix_spa
 	static std::array<FloatType, matmul::num_block_rows * matmul::num_A_block_cols> A_cache_storage;
 	// we want this to fit in L3 cache
 	static std::array<FloatType, matmul::num_B_block_rows * matmul::num_block_cols> B_cache_storage;
+
+	matrix_span A_cache { matmul::num_block_rows, matmul::num_A_block_cols, A_cache_storage };
+	matrix_span B_cache { matmul::num_B_block_rows, matmul::num_block_cols, B_cache_storage };
+
+	for(int n = 0; n < C.num_columns; n += matmul::num_block_cols)
+	{
+		const int block_num_cols = std::min(matmul::num_block_cols, C.num_columns - n);
+
+		for(int k = 0; k < B.num_rows; k += matmul::num_B_block_rows)
+		{
+			const int block_middle_num = std::min(matmul::num_B_block_rows, B.num_rows - k);
+
+			const_matrix_view B_block { B, k, n, block_middle_num, block_num_cols };
+
+			B_cache.num_rows    = block_middle_num;
+			B_cache.num_columns = block_num_cols;
+
+			load_block(B_block, B_cache);
+
+			for(int m = 0; m < C.num_rows; m += matmul::num_block_rows)
+			{
+				const int block_num_rows = std::min(matmul::num_block_rows, C.num_rows - m);
+
+				const_matrix_view A_block { A, m, k, block_num_rows, block_middle_num };
+
+				A_cache.num_rows    = block_num_rows;
+				A_cache.num_columns = block_middle_num;
+
+				load_block(A_block, A_cache);
+
+				for(int tile_n = 0; tile_n < block_num_cols; tile_n += matmul::num_tile_cols)
+				{
+					const int num_tile_cols = std::min(matmul::num_tile_cols, block_num_cols - tile_n);
+
+					for(int tile_m = 0; tile_m < block_num_rows; tile_m += matmul::num_tile_rows)
+					{
+						const int num_tile_rows = std::min(matmul::num_tile_rows, block_num_rows - tile_m);
+
+						matrix_view C_tile { C, m + tile_m, n + tile_n, num_tile_rows, num_tile_cols };
+						const_matrix_view A_tile { A_cache, tile_m, 0, num_tile_rows, block_middle_num };
+						const_matrix_view B_tile { B_cache, 0, tile_n, block_middle_num, num_tile_cols };
+
+						multiply_tile<matmul::num_tile_rows, matmul::num_tile_cols>(C_tile, A_tile, B_tile);
+					}
+				}
+			}
+		}
+	}
 }
 
 void multiply(matrix_span product, const_matrix_span left, const_matrix_span right)
