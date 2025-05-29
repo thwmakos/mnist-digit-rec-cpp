@@ -107,7 +107,7 @@ TEST_CASE("test AVX512 add_to")
 #endif
 }
 
-TEST_CASE("test AVX512 matrix multiplication")
+TEST_CASE("test AVX512/AVX2 and non-SIMD matrix multiplication")
 {
 	std::println("Release build: {}", release_build);
 
@@ -122,6 +122,10 @@ TEST_CASE("test AVX512 matrix multiplication")
 	auto multiply_avx2_helper = [] (const matrix &A, const matrix &B) 
 		{ 
 			return multiply_helper(A, B, thwmakos::multiply_avx2_blocked_tiled);
+		};
+	auto non_simd_helper = [] (const matrix &A, const matrix &B)
+		{
+			return multiply_helper(A, B, thwmakos::multiply_blocked_tiled);
 		};
 
 	// test unaligned sizes that use masked version of submatrix
@@ -138,6 +142,7 @@ TEST_CASE("test AVX512 matrix multiplication")
 				randomise(B);
 
 				auto expected = multiply_naive_helper(A, B);
+				CHECK_MESSAGE(expected == non_simd_helper(A, B), std::format("non-simd: dimensions {}, {}, {}", n, middle, m));
 #ifdef __AVX512F__
 				CHECK_MESSAGE(expected == multiply_avx512_helper(A, B), std::format("avx512: dimensions: {}, {}, {}", n, middle, m));
 #endif
@@ -157,6 +162,7 @@ TEST_CASE("test AVX512 matrix multiplication")
 		randomise(B_large);
 
 		auto [C1, duration1] = time_function_call([&]() { return multiply_naive_helper(A_large, B_large); } );
+		auto [C11, duration11] = time_function_call([&]() { return non_simd_helper(A_large, B_large); } );
 
 #ifdef __AVX512F__
 		auto [C2, duration2] = time_function_call([&]() { return multiply_avx512_helper(A_large, B_large); } );
@@ -166,6 +172,7 @@ TEST_CASE("test AVX512 matrix multiplication")
 #endif
 		std::println("A dimensions: ({}, {}), B dimensions: ({}, {})", A_large.num_rows(), A_large.num_cols(), B_large.num_rows(), B_large.num_cols());
 		std::println("Naive multiply with transpose took {}", duration1);
+		std::println("Non-SIMD blocked tiled took {}", duration11);
 #ifdef __AVX512F__
 		std::println("AVX512 blocked tiled took {}", duration2);
 #endif

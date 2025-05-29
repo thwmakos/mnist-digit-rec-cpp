@@ -537,6 +537,8 @@ void multiply(matrix_span product, const_matrix_span left, const_matrix_span rig
 // simple non-SIMD matrix multiplication fallback
 // used in testing to compare against SIMD accelerated versions
 void multiply_naive(matrix_span product, const_matrix_span left, const_matrix_span right);
+// cache optimised version of non-SIMD matrix multiplication
+void multiply_blocked_tiled(matrix_span product, const_matrix_span left, const_matrix_span right);
 
 // multiply each element of mat by scalar
 void scalar_multiply(matrix_span mat, FloatType scalar);
