@@ -128,7 +128,7 @@ void multiply(matrix_span product, const_matrix_span left, const_matrix_span rig
 	//multiply_avx2(product, left, right);
 	multiply_avx2_blocked_tiled(product, left, right);
 #else
-	multiply_naive(product, left, right);
+	multiply_blocked_tiled(product, left, right);
 #endif
 }
 
